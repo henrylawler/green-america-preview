@@ -42,19 +42,30 @@
 
   #text-overlay {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-    z-index: 20; text-align: center; max-width: 600px; width: 90%;
+    z-index: 20; text-align: center; max-width: 650px; width: 90%;
     color: #fff; opacity: 0; transition: opacity 0.8s;
+    pointer-events: none;
   }
   #text-overlay.visible { opacity: 1; }
   #text-overlay h2 {
-    font-size: clamp(20px, 4vw, 32px); margin-bottom: 8px;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    font-size: clamp(20px, 4vw, 34px); margin-bottom: 8px;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
     color: #C9B99A; font-weight: normal; font-style: italic;
   }
   #text-overlay p {
-    font-size: clamp(14px, 2.5vw, 18px); line-height: 1.5;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    font-size: clamp(14px, 2.5vw, 18px); line-height: 1.6;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.9);
     color: rgba(255,255,255,0.9);
+  }
+  #text-overlay .disclaimer {
+    font-size: clamp(10px, 1.5vw, 12px);
+    color: rgba(255,255,255,0.45);
+    margin-top: 12px; font-style: italic;
+  }
+  #text-overlay .sfx {
+    font-size: clamp(12px, 2vw, 15px);
+    color: #E85D04; letter-spacing: 2px;
+    margin-top: 6px; font-weight: bold;
   }
 
   #continue-btn {
@@ -89,7 +100,7 @@
     padding: 14px 36px; font-size: 18px; text-decoration: none;
     letter-spacing: 1px; font-family: Georgia, serif;
     border-radius: 3px; margin-top: 10px;
-    transition: background 0.3s;
+    transition: background 0.3s; box-shadow: 0 4px 20px rgba(232,93,4,0.4);
   }
   #cta-section a:hover { background: #d14e00; }
 
@@ -132,6 +143,8 @@
 <div id="text-overlay">
   <h2 id="text-title"></h2>
   <p id="text-body"></p>
+  <p id="text-sfx" class="sfx"></p>
+  <p id="text-disclaimer" class="disclaimer"></p>
 </div>
 
 <div id="height-marker"></div>
@@ -143,29 +156,41 @@
   <a href="tel:+17705608656">Book a Crew — (770) 560-8656</a>
 </div>
 
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"></script>
 <script>
 (function() {
   'use strict';
 
-  // === COLORS ===
+  // === BRAND COLORS ===
   const C = {
     forest: 0x1B4332,
     khaki: 0xC9B99A,
     orange: 0xE85D04,
     dark: 0x0B1D0F,
+    offWhite: 0xF5F1EB,
     bark: 0x5C3A1E,
     darkBark: 0x3E2712,
-    leaf: 0x4A9B5E,
-    leafDark: 0x2D7A3F,
+    lightBark: 0x7A5233,
+    leaf: 0x3D8B4F,
+    leafDark: 0x2A6B38,
+    leafLight: 0x5FAD6B,
     grass: 0x2A5E2A,
+    grassDark: 0x1E4A1E,
+    grassLight: 0x3A7A3A,
     sky1: 0x87CEEB,
-    sky2: 0xE8D5B7,
+    sky2: 0xFFD7A0,
     roof: 0x8B4513,
+    roofDark: 0x5C2E0A,
     house: 0xE8DCC8,
-    metal: 0x888888,
+    metal: 0x999999,
+    metalDark: 0x555555,
     rope: 0xD4A54A,
-    white: 0xFFFFFF,
+    ropeDark: 0xA07830,
+    skin: 0xC68E5B,
+    skinDark: 0xA0704A,
+    redPolo: 0xCC2222,
+    khakiPants: 0xC2B280,
+    chainColor: 0x333333,
   };
 
   // === GLOBALS ===
@@ -175,7 +200,7 @@
   let orbitEnabled = false;
   let orbitAngle = 0, orbitPitch = 0;
   let mouseDown = false, lastMX = 0, lastMY = 0;
-  let particles = [];
+  let leafParticles = [], hazeParticles = null, sawdustSystem = null;
   let fallingLimb = null;
   let limbFalling = false;
   let limbY = 0;
@@ -185,17 +210,27 @@
   let cutGap = null;
   let climbProgress = 0;
   let climbActive = false;
-  let climbTexts = [];
   let groundCrewFigures = [];
+  let jermaine = null;
+  let jermaineThumbsUp = false;
+  let flyingChainsaw = null;
+  let chainsawFlying = false;
+  let chainsawFlyProgress = 0;
+  let catchPhase = 0; // 0=intro, 1=toss, 2=caught, 3=thumbsup
+  let allLeaves = [];
+  let allRopes = [];
+  let treeBranches = [];
 
   const TREE_X = 0, TREE_Z = 0;
   const TRUNK_HEIGHT = 42;
-  const TRUNK_RADIUS = 1.2;
+  const TRUNK_RADIUS = 1.4;
 
   // === UI REFS ===
   const textOverlay = document.getElementById('text-overlay');
   const textTitle = document.getElementById('text-title');
   const textBody = document.getElementById('text-body');
+  const textSfx = document.getElementById('text-sfx');
+  const textDisclaimer = document.getElementById('text-disclaimer');
   const continueBtn = document.getElementById('continue-btn');
   const heightMarker = document.getElementById('height-marker');
   const progressBar = document.getElementById('progress-bar');
@@ -203,51 +238,212 @@
   const ctaSection = document.getElementById('cta-section');
   const loadingScreen = document.getElementById('loading');
 
-  // === STEP DEFINITIONS ===
+  // === PROCEDURAL TEXTURES ===
+  function createBarkTexture(w, h) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    // Base
+    ctx.fillStyle = '#5C3A1E';
+    ctx.fillRect(0, 0, w, h);
+    // Bark grooves
+    for (let i = 0; i < 120; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const len = 10 + Math.random() * 60;
+      const shade = Math.floor(Math.random() * 40);
+      ctx.strokeStyle = `rgb(${62 + shade}, ${30 + shade}, ${12 + shade})`;
+      ctx.lineWidth = 1 + Math.random() * 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (Math.random() - 0.5) * 8, y + len);
+      ctx.stroke();
+    }
+    // Knots
+    for (let i = 0; i < 6; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const r = 3 + Math.random() * 8;
+      ctx.fillStyle = '#3E2712';
+      ctx.beginPath();
+      ctx.ellipse(x, y, r, r * 1.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Highlights
+    for (let i = 0; i < 40; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      ctx.fillStyle = 'rgba(122, 82, 51, 0.3)';
+      ctx.fillRect(x, y, 2 + Math.random() * 4, 1 + Math.random() * 15);
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  function createBarkNormalMap(w, h) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#8080FF';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const len = 5 + Math.random() * 40;
+      const r = Math.floor(100 + Math.random() * 50);
+      const g = Math.floor(100 + Math.random() * 50);
+      ctx.strokeStyle = `rgb(${r}, ${g}, 255)`;
+      ctx.lineWidth = 1 + Math.random() * 2;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (Math.random() - 0.5) * 6, y + len);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  function createGrassTexture(w, h) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    // Base green
+    ctx.fillStyle = '#2A5E2A';
+    ctx.fillRect(0, 0, w, h);
+    // Variation patches
+    for (let i = 0; i < 300; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const shade = Math.random();
+      if (shade < 0.15) {
+        ctx.fillStyle = 'rgba(80, 60, 30, 0.3)'; // brown
+      } else if (shade < 0.4) {
+        ctx.fillStyle = 'rgba(30, 74, 30, 0.5)'; // dark
+      } else {
+        ctx.fillStyle = 'rgba(58, 122, 58, 0.4)'; // light
+      }
+      ctx.beginPath();
+      ctx.ellipse(x, y, 2 + Math.random() * 12, 2 + Math.random() * 12, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Grass blades
+    for (let i = 0; i < 500; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const g = Math.floor(60 + Math.random() * 80);
+      ctx.strokeStyle = `rgba(${20 + Math.floor(Math.random()*30)}, ${g}, ${20 + Math.floor(Math.random()*20)}, 0.6)`;
+      ctx.lineWidth = 0.5 + Math.random();
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (Math.random() - 0.5) * 3, y - 2 - Math.random() * 5);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(8, 8);
+    return tex;
+  }
+
+  function createLeafTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 64, 64);
+    // Leaf shape
+    const g = 100 + Math.floor(Math.random() * 80);
+    ctx.fillStyle = `rgb(${30 + Math.floor(Math.random()*40)}, ${g}, ${30 + Math.floor(Math.random()*30)})`;
+    ctx.beginPath();
+    ctx.moveTo(32, 4);
+    ctx.bezierCurveTo(50, 10, 58, 30, 32, 60);
+    ctx.bezierCurveTo(6, 30, 14, 10, 32, 4);
+    ctx.fill();
+    // Vein
+    ctx.strokeStyle = `rgba(${20}, ${g - 20}, ${20}, 0.5)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(32, 8);
+    ctx.lineTo(32, 55);
+    ctx.stroke();
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.premultiplyAlpha = true;
+    return tex;
+  }
+
+  function createSidingTexture(baseColor, w, h) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const r = parseInt(baseColor.slice(1,3),16), g = parseInt(baseColor.slice(3,5),16), b = parseInt(baseColor.slice(5,7),16);
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(0, 0, w, h);
+    // Horizontal siding lines
+    for (let y = 0; y < h; y += 8) {
+      ctx.strokeStyle = `rgba(${Math.max(0,r-30)}, ${Math.max(0,g-30)}, ${Math.max(0,b-30)}, 0.3)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+  }
+
+  // === STEP DEFINITIONS (8 steps) ===
   const steps = [
-    { // 0 — Ground Level
+    { // 0 — The Catch (Jermaine)
+      title: 'Day one. Jermaine hands you the saw.',
+      body: '',
+      cam: { x: 0, y: 2.5, z: 5, tx: 0, ty: 2, tz: -2 },
+      orbit: false,
+      catch: true,
+    },
+    { // 1 — Assessment
       title: 'The Assessment',
       body: 'Every job starts here. Looking up. Planning the climb.',
-      cam: { x: 6, y: 3, z: 10, tx: 0, ty: 20, tz: 0 },
+      cam: { x: 6, y: 3, z: 10, tx: 0, ty: 22, tz: 0 },
       orbit: false,
     },
-    { // 1 — Gear Up
+    { // 2 — Gear
       title: 'The Gear',
       body: 'Harness. Ropes. Saw. 40 pounds of gear going up with you.',
       cam: { x: 4, y: 1.5, z: 4, tx: 2, ty: 0.5, tz: 0 },
       orbit: false,
     },
-    { // 2 — The Climb
+    { // 3 — The Climb
       title: '',
       body: '',
-      cam: null, // animated
+      cam: null,
       orbit: false,
       climb: true,
     },
-    { // 3 — The Canopy / Office
+    { // 4 — The Office
       title: 'The Office',
       body: 'No cubicle. No ceiling. Just sky and saw.',
       cam: { x: 3, y: 39, z: 5, tx: 15, ty: 30, tz: -15 },
       orbit: true,
     },
-    { // 4 — The Cut
+    { // 5 — The Cut
       title: 'The Cut',
       body: 'One clean cut. 200 pounds of oak, controlled all the way down.',
       cam: { x: 3, y: 36, z: 5, tx: 5, ty: 34, tz: 0 },
       orbit: false,
       cut: true,
     },
-    { // 5 — The Drop
+    { // 6 — The Drop
       title: 'The Drop',
       body: "That's why you hire a crew.",
       cam: { x: 8, y: 3, z: 8, tx: 4, ty: 5, tz: 0 },
       orbit: false,
       drop: true,
     },
-    { // 6 — Closing
+    { // 7 — Closing
       title: '',
       body: 'Now you know what we do up there.',
-      cam: { x: 20, y: 8, z: 20, tx: 0, ty: 18, tz: 0 },
+      cam: { x: 22, y: 8, z: 22, tx: 0, ty: 18, tz: 0 },
       orbit: false,
       closing: true,
     },
@@ -258,45 +454,62 @@
     scene = new THREE.Scene();
     clock = new THREE.Clock();
 
-    // Sky
-    scene.background = new THREE.Color(0x6BAFE0);
-    scene.fog = new THREE.FogExp2(0x8FBFDF, 0.004);
+    // Fog
+    scene.fog = new THREE.FogExp2(0xB0C8D8, 0.006);
 
     // Camera
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
 
     // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.15;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     document.body.appendChild(renderer.domElement);
 
-    // Lights — morning sun
-    const ambient = new THREE.AmbientLight(0x8899AA, 0.6);
+    // === LIGHTING — Golden hour morning ===
+    // Ambient (sky color, slightly blue)
+    const ambient = new THREE.HemisphereLight(0x87CEEB, 0x2A5E2A, 0.5);
     scene.add(ambient);
 
-    const sun = new THREE.DirectionalLight(0xFFF5E0, 1.4);
-    sun.position.set(30, 50, 20);
+    // Key light (sun, warm morning)
+    const sun = new THREE.DirectionalLight(0xFFE4B5, 1.6);
+    sun.position.set(40, 45, 25);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 120;
-    sun.shadow.camera.left = -40;
-    sun.shadow.camera.right = 40;
-    sun.shadow.camera.top = 50;
+    sun.shadow.camera.far = 150;
+    sun.shadow.camera.left = -50;
+    sun.shadow.camera.right = 50;
+    sun.shadow.camera.top = 60;
     sun.shadow.camera.bottom = -10;
+    sun.shadow.bias = -0.001;
+    sun.shadow.normalBias = 0.02;
     scene.add(sun);
 
-    const fill = new THREE.DirectionalLight(0x9BB8D4, 0.3);
-    fill.position.set(-20, 20, -10);
+    // Fill light (cool, from opposite side)
+    const fill = new THREE.DirectionalLight(0x8AAFC4, 0.35);
+    fill.position.set(-25, 20, -15);
     scene.add(fill);
 
+    // Rim / back light
+    const rim = new THREE.DirectionalLight(0xFFD090, 0.25);
+    rim.position.set(-10, 30, -30);
+    scene.add(rim);
+
+    // Bounce light from ground
+    const bounce = new THREE.PointLight(0x3A7A3A, 0.15, 50);
+    bounce.position.set(0, 1, 0);
+    scene.add(bounce);
+
+    buildSky();
     buildScene();
-    createParticles();
+    createLeafParticles();
+    createHazeParticles();
     buildProgressDots();
 
     // Remove loading
@@ -304,193 +517,461 @@
       loadingScreen.style.opacity = '0';
       setTimeout(() => { loadingScreen.style.display = 'none'; }, 800);
       enterStep(0);
-    }, 800);
+    }, 1000);
 
     animate();
   }
 
+  // === SKY DOME ===
+  function buildSky() {
+    const skyGeo = new THREE.SphereGeometry(200, 32, 32);
+    const skyCanvas = document.createElement('canvas');
+    skyCanvas.width = 512; skyCanvas.height = 512;
+    const ctx = skyCanvas.getContext('2d');
+    // Gradient: warm horizon to blue sky
+    const grad = ctx.createLinearGradient(0, 0, 0, 512);
+    grad.addColorStop(0, '#4A90C8');     // upper sky
+    grad.addColorStop(0.35, '#7AB8E0');  // mid sky
+    grad.addColorStop(0.65, '#B0D4E8');  // lower sky
+    grad.addColorStop(0.85, '#F0D5A8');  // warm horizon
+    grad.addColorStop(1.0, '#E8C090');   // ground horizon
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 512, 512);
+    // Subtle clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    for (let i = 0; i < 18; i++) {
+      const cx = Math.random() * 512;
+      const cy = 60 + Math.random() * 200;
+      const rw = 40 + Math.random() * 100;
+      const rh = 10 + Math.random() * 25;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Extra puffs
+      for (let j = 0; j < 3; j++) {
+        ctx.beginPath();
+        ctx.ellipse(cx + (Math.random()-0.5)*rw, cy + (Math.random()-0.5)*rh*2, rw*0.5, rh*0.7, 0, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+    const skyTex = new THREE.CanvasTexture(skyCanvas);
+    const skyMat = new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide });
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
+  }
+
   // === BUILD SCENE ===
   function buildScene() {
-    // Ground
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
-    const groundMat = new THREE.MeshLambertMaterial({ color: C.grass });
+    buildGround();
+    buildTree();
+    buildHouse(-25, 0, -18, 9, 7, 7, '#E0D5C5', '#8B4513');
+    buildHouse(22, 0, -28, 11, 8, 9, '#D5C9B3', '#6B3A2A');
+    buildHouse(-18, 0, 28, 8, 6, 8, '#DDD8CC', '#555555');
+    buildHouse(28, 0, 18, 10, 7, 8, '#CFC3AD', '#7A4020');
+    buildTruck(9, 0, 8);
+    buildGearOnGround();
+    buildRopes();
+    buildGroundCrew();
+    buildJermaine();
+    buildFlyingChainsaw();
+  }
+
+  // === GROUND ===
+  function buildGround() {
+    const grassTex = createGrassTexture(512, 512);
+    const groundGeo = new THREE.PlaneGeometry(250, 250, 64, 64);
+    // Slight terrain undulation
+    const posAttr = groundGeo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const y = posAttr.getY(i);
+      const dist = Math.sqrt(x*x + y*y);
+      posAttr.setZ(i, Math.sin(x * 0.05) * 0.3 + Math.cos(y * 0.07) * 0.2 - (dist > 30 ? (dist-30)*0.01 : 0));
+    }
+    groundGeo.computeVertexNormals();
+    const groundMat = new THREE.MeshStandardMaterial({
+      map: grassTex,
+      roughness: 0.95,
+      metalness: 0.0,
+      color: 0x2A5E2A,
+    });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Tree
-    buildTree();
-
-    // Houses
-    buildHouse(-25, 0, -15, 8, 6, 6, C.house, C.roof);
-    buildHouse(20, 0, -25, 10, 7, 8, 0xD5C9B3, 0x6B3A2A);
-    buildHouse(-15, 0, 25, 7, 5, 7, 0xE0D8CC, 0x555555);
-    buildHouse(25, 0, 15, 9, 6, 7, 0xCFC3AD, C.roof);
-
-    // Truck
-    buildTruck(8, 0, 7);
-
-    // Gear on ground
-    buildGearOnGround();
-
-    // Rigging ropes on tree
-    buildRopes();
-
-    // Ground crew figures
-    buildGroundCrew();
+    // Scattered ground detail — small rocks, twigs
+    for (let i = 0; i < 25; i++) {
+      const size = 0.1 + Math.random() * 0.3;
+      const geo = new THREE.DodecahedronGeometry(size, 0);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x666655, roughness: 0.9, metalness: 0.1 });
+      const rock = new THREE.Mesh(geo, mat);
+      rock.position.set((Math.random()-0.5)*40, size*0.3, (Math.random()-0.5)*40);
+      rock.castShadow = true;
+      scene.add(rock);
+    }
   }
 
+  // === TREE (REALISTIC) ===
   function buildTree() {
-    // Trunk
-    const trunkGeo = new THREE.CylinderGeometry(TRUNK_RADIUS * 0.7, TRUNK_RADIUS, TRUNK_HEIGHT, 12);
-    const trunkMat = new THREE.MeshLambertMaterial({ color: C.bark });
-    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    const barkTex = createBarkTexture(256, 512);
+    barkTex.repeat.set(2, 4);
+    const barkNorm = createBarkNormalMap(256, 512);
+    barkNorm.repeat.set(2, 4);
+
+    const barkMat = new THREE.MeshStandardMaterial({
+      map: barkTex,
+      normalMap: barkNorm,
+      normalScale: new THREE.Vector2(0.8, 0.8),
+      roughness: 0.92,
+      metalness: 0.02,
+      color: 0x7A5535,
+    });
+
+    // Trunk — slight taper, higher segments
+    const trunkGeo = new THREE.CylinderGeometry(TRUNK_RADIUS * 0.65, TRUNK_RADIUS * 1.1, TRUNK_HEIGHT, 24, 12);
+    // Slight irregularity
+    const tPos = trunkGeo.attributes.position;
+    for (let i = 0; i < tPos.count; i++) {
+      const x = tPos.getX(i);
+      const y = tPos.getY(i);
+      const z = tPos.getZ(i);
+      const angle = Math.atan2(z, x);
+      const r = Math.sqrt(x*x + z*z);
+      const wobble = 1 + Math.sin(angle * 5 + y * 0.3) * 0.04 + Math.sin(angle * 11 + y * 0.7) * 0.02;
+      tPos.setX(i, x * wobble);
+      tPos.setZ(i, z * wobble);
+    }
+    trunkGeo.computeVertexNormals();
+
+    const trunk = new THREE.Mesh(trunkGeo, barkMat);
     trunk.position.set(TREE_X, TRUNK_HEIGHT / 2, TREE_Z);
     trunk.castShadow = true;
+    trunk.receiveShadow = true;
     scene.add(trunk);
 
-    // Bark texture lines
-    for (let i = 0; i < 8; i++) {
-      const lineGeo = new THREE.CylinderGeometry(0.02, 0.02, TRUNK_HEIGHT * 0.9, 4);
-      const lineMat = new THREE.MeshLambertMaterial({ color: C.darkBark });
-      const line = new THREE.Mesh(lineGeo, lineMat);
-      const angle = (i / 8) * Math.PI * 2;
-      const r = TRUNK_RADIUS * 0.95 - (i > 4 ? 0.15 : 0);
-      line.position.set(TREE_X + Math.cos(angle) * r, TRUNK_HEIGHT / 2, TREE_Z + Math.sin(angle) * r);
-      scene.add(line);
+    // Root flares at base
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
+      const rootGeo = new THREE.CylinderGeometry(0.15, 0.5, 3, 8);
+      const root = new THREE.Mesh(rootGeo, barkMat);
+      root.position.set(
+        TREE_X + Math.cos(angle) * (TRUNK_RADIUS * 0.9),
+        1.2,
+        TREE_Z + Math.sin(angle) * (TRUNK_RADIUS * 0.9)
+      );
+      root.rotation.z = Math.cos(angle) * 0.5;
+      root.rotation.x = -Math.sin(angle) * 0.5;
+      root.castShadow = true;
+      scene.add(root);
     }
 
-    // Main branches
+    // Branches
     const branches = [
-      { y: 28, angle: 0.3, len: 8, r: 0.4 },
-      { y: 32, angle: 2.1, len: 10, r: 0.5 },
-      { y: 34, angle: 4.2, len: 7, r: 0.35 },
-      { y: 36, angle: 1.0, len: 9, r: 0.45 },
-      { y: 38, angle: 3.5, len: 6, r: 0.3 },
-      { y: 40, angle: 5.5, len: 8, r: 0.4 },
-      { y: 30, angle: 1.5, len: 7, r: 0.35 },
-      { y: 35, angle: 0.0, len: 11, r: 0.5 }, // this is the one we cut
+      { y: 26, angle: 0.3, len: 9, r: 0.45 },
+      { y: 30, angle: 2.1, len: 11, r: 0.55 },
+      { y: 33, angle: 4.2, len: 8, r: 0.4 },
+      { y: 35, angle: 1.0, len: 10, r: 0.48 },
+      { y: 37, angle: 3.5, len: 7, r: 0.35 },
+      { y: 39, angle: 5.5, len: 9, r: 0.42 },
+      { y: 28, angle: 1.5, len: 8, r: 0.38 },
+      { y: 35, angle: 0.0, len: 12, r: 0.55 }, // cut branch (#7)
+      { y: 32, angle: 5.0, len: 7, r: 0.3 },
+      { y: 40, angle: 2.8, len: 8, r: 0.35 },
     ];
 
     branches.forEach((b, i) => {
-      const bGeo = new THREE.CylinderGeometry(b.r * 0.5, b.r, b.len, 8);
-      const bMat = new THREE.MeshLambertMaterial({ color: C.bark });
-      const branch = new THREE.Mesh(bGeo, bMat);
-      branch.castShadow = true;
-
-      branch.position.set(
-        TREE_X + Math.cos(b.angle) * b.len * 0.4,
-        b.y,
-        TREE_Z + Math.sin(b.angle) * b.len * 0.4
-      );
-      branch.rotation.z = Math.cos(b.angle) * 0.6;
-      branch.rotation.x = -Math.sin(b.angle) * 0.6;
-
-      if (i === 7) {
-        branch.name = 'cutBranch';
+      // Main branch
+      const bGeo = new THREE.CylinderGeometry(b.r * 0.4, b.r, b.len, 12, 4);
+      // Wobble branch
+      const bPos = bGeo.attributes.position;
+      for (let j = 0; j < bPos.count; j++) {
+        const y = bPos.getY(j);
+        const nx = bPos.getX(j) + Math.sin(y * 0.8) * 0.08;
+        bPos.setX(j, nx);
       }
-      scene.add(branch);
+      bGeo.computeVertexNormals();
 
-      // Leaf cluster at end of branch
-      const leafCount = 3 + Math.floor(Math.random() * 3);
-      for (let j = 0; j < leafCount; j++) {
-        const lGeo = new THREE.DodecahedronGeometry(1.5 + Math.random() * 1.5, 1);
-        const lMat = new THREE.MeshLambertMaterial({
-          color: Math.random() > 0.5 ? C.leaf : C.leafDark
-        });
-        const leaf = new THREE.Mesh(lGeo, lMat);
-        leaf.castShadow = true;
-        leaf.position.set(
-          TREE_X + Math.cos(b.angle) * (b.len * 0.6 + j * 1.2) + (Math.random() - 0.5) * 2,
-          b.y + (Math.random() - 0.3) * 3,
-          TREE_Z + Math.sin(b.angle) * (b.len * 0.6 + j * 1.2) + (Math.random() - 0.5) * 2
+      const branch = new THREE.Mesh(bGeo, barkMat);
+      branch.castShadow = true;
+      branch.receiveShadow = true;
+
+      const mx = Math.cos(b.angle) * b.len * 0.4;
+      const mz = Math.sin(b.angle) * b.len * 0.4;
+      branch.position.set(TREE_X + mx, b.y, TREE_Z + mz);
+      branch.rotation.z = Math.cos(b.angle) * 0.65;
+      branch.rotation.x = -Math.sin(b.angle) * 0.65;
+
+      if (i === 7) branch.name = 'cutBranch';
+      scene.add(branch);
+      treeBranches.push(branch);
+
+      // Sub-branches
+      for (let s = 0; s < 2; s++) {
+        const subLen = b.len * 0.3 + Math.random() * b.len * 0.2;
+        const subGeo = new THREE.CylinderGeometry(b.r * 0.15, b.r * 0.3, subLen, 8);
+        const sub = new THREE.Mesh(subGeo, barkMat);
+        const subAngle = b.angle + (s === 0 ? 0.5 : -0.5);
+        const endFrac = 0.5 + s * 0.3;
+        sub.position.set(
+          TREE_X + Math.cos(b.angle) * b.len * endFrac + Math.cos(subAngle) * subLen * 0.3,
+          b.y + 1 + s,
+          TREE_Z + Math.sin(b.angle) * b.len * endFrac + Math.sin(subAngle) * subLen * 0.3
         );
-        if (i === 7) leaf.name = 'cutLeaf';
-        scene.add(leaf);
+        sub.rotation.z = Math.cos(subAngle) * 0.8;
+        sub.rotation.x = -Math.sin(subAngle) * 0.8;
+        sub.castShadow = true;
+        if (i === 7) sub.name = 'cutBranch';
+        scene.add(sub);
+      }
+
+      // Leaf clusters — planes with transparency
+      const leafCount = 6 + Math.floor(Math.random() * 4);
+      for (let j = 0; j < leafCount; j++) {
+        const clusterGroup = new THREE.Group();
+        const clusterX = TREE_X + Math.cos(b.angle) * (b.len * 0.4 + j * 1.0) + (Math.random() - 0.5) * 3;
+        const clusterY = b.y + (Math.random() - 0.3) * 4;
+        const clusterZ = TREE_Z + Math.sin(b.angle) * (b.len * 0.4 + j * 1.0) + (Math.random() - 0.5) * 3;
+
+        // Multiple small leaf planes per cluster
+        const planeCount = 8 + Math.floor(Math.random() * 8);
+        for (let k = 0; k < planeCount; k++) {
+          const leafTex = createLeafTexture();
+          const leafMat = new THREE.MeshStandardMaterial({
+            map: leafTex,
+            transparent: true,
+            alphaTest: 0.3,
+            side: THREE.DoubleSide,
+            roughness: 0.7,
+            metalness: 0.0,
+            color: Math.random() > 0.3 ? C.leaf : (Math.random() > 0.5 ? C.leafDark : C.leafLight),
+          });
+          const size = 0.4 + Math.random() * 0.6;
+          const leafGeo = new THREE.PlaneGeometry(size, size * 1.3);
+          const leafMesh = new THREE.Mesh(leafGeo, leafMat);
+          leafMesh.position.set(
+            (Math.random() - 0.5) * 2.5,
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2.5
+          );
+          leafMesh.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+          );
+          leafMesh.castShadow = true;
+          clusterGroup.add(leafMesh);
+        }
+        clusterGroup.position.set(clusterX, clusterY, clusterZ);
+        if (i === 7) clusterGroup.name = 'cutLeaf';
+        scene.add(clusterGroup);
+        allLeaves.push({ mesh: clusterGroup, baseY: clusterY, phase: Math.random() * Math.PI * 2 });
       }
     });
 
-    // Crown / canopy top
-    for (let k = 0; k < 12; k++) {
-      const cGeo = new THREE.DodecahedronGeometry(2 + Math.random() * 2, 1);
-      const cMat = new THREE.MeshLambertMaterial({
-        color: Math.random() > 0.4 ? C.leaf : C.leafDark
-      });
-      const crown = new THREE.Mesh(cGeo, cMat);
-      crown.castShadow = true;
+    // Crown top leaf clusters
+    for (let k = 0; k < 16; k++) {
+      const clusterGroup = new THREE.Group();
       const ca = Math.random() * Math.PI * 2;
-      const cr = Math.random() * 5;
-      crown.position.set(
-        TREE_X + Math.cos(ca) * cr,
-        38 + Math.random() * 6,
-        TREE_Z + Math.sin(ca) * cr
-      );
-      scene.add(crown);
+      const cr = Math.random() * 6;
+      const cy = 38 + Math.random() * 7;
+      const planeCount = 10 + Math.floor(Math.random() * 8);
+      for (let p = 0; p < planeCount; p++) {
+        const leafTex = createLeafTexture();
+        const leafMat = new THREE.MeshStandardMaterial({
+          map: leafTex,
+          transparent: true,
+          alphaTest: 0.3,
+          side: THREE.DoubleSide,
+          roughness: 0.7,
+          metalness: 0.0,
+          color: Math.random() > 0.4 ? C.leaf : C.leafDark,
+        });
+        const size = 0.4 + Math.random() * 0.7;
+        const leafGeo = new THREE.PlaneGeometry(size, size * 1.3);
+        const lf = new THREE.Mesh(leafGeo, leafMat);
+        lf.position.set((Math.random()-0.5)*3, (Math.random()-0.5)*2.5, (Math.random()-0.5)*3);
+        lf.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        lf.castShadow = true;
+        clusterGroup.add(lf);
+      }
+      clusterGroup.position.set(TREE_X + Math.cos(ca)*cr, cy, TREE_Z + Math.sin(ca)*cr);
+      scene.add(clusterGroup);
+      allLeaves.push({ mesh: clusterGroup, baseY: cy, phase: Math.random() * Math.PI * 2 });
     }
   }
 
-  function buildHouse(x, y, z, w, h, d, wallColor, roofColor) {
+  // === HOUSES ===
+  function buildHouse(x, y, z, w, h, d, wallHex, roofHex) {
+    const sidingTex = createSidingTexture(wallHex, 128, 128);
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: sidingTex,
+      roughness: 0.85,
+      metalness: 0.02,
+    });
+
     // Walls
     const wallGeo = new THREE.BoxGeometry(w, h, d);
-    const wallMat = new THREE.MeshLambertMaterial({ color: wallColor });
     const wall = new THREE.Mesh(wallGeo, wallMat);
     wall.position.set(x, y + h / 2, z);
     wall.castShadow = true;
     wall.receiveShadow = true;
     scene.add(wall);
 
-    // Roof
-    const roofGeo = new THREE.ConeGeometry(Math.max(w, d) * 0.7, 3, 4);
-    const roofMat = new THREE.MeshLambertMaterial({ color: roofColor });
+    // Pitched roof
+    const roofMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(roofHex),
+      roughness: 0.7,
+      metalness: 0.05,
+    });
+    // Simple gable roof using extrude or cone approx
+    const roofGeo = new THREE.ConeGeometry(Math.max(w, d) * 0.72, 3.5, 4);
     const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.set(x, y + h + 1.5, z);
+    roof.position.set(x, y + h + 1.75, z);
     roof.rotation.y = Math.PI / 4;
     roof.castShadow = true;
     scene.add(roof);
+
+    // Windows
+    const winMat = new THREE.MeshStandardMaterial({
+      color: 0x88BBDD,
+      roughness: 0.2,
+      metalness: 0.3,
+      transparent: true,
+      opacity: 0.7,
+    });
+    const winFrameMat = new THREE.MeshStandardMaterial({ color: 0xF5F1EB, roughness: 0.5, metalness: 0.1 });
+
+    // Front windows
+    for (let wi = 0; wi < 2; wi++) {
+      const ww = 1.2, wh = 1.5;
+      const winGeo = new THREE.PlaneGeometry(ww, wh);
+      const win = new THREE.Mesh(winGeo, winMat);
+      const wx = x + (wi === 0 ? -w*0.25 : w*0.25);
+      win.position.set(wx, y + h*0.55, z + d/2 + 0.02);
+      scene.add(win);
+      // Frame
+      const frameGeo = new THREE.PlaneGeometry(ww + 0.2, wh + 0.2);
+      const frame = new THREE.Mesh(frameGeo, winFrameMat);
+      frame.position.set(wx, y + h*0.55, z + d/2 + 0.01);
+      scene.add(frame);
+    }
+
+    // Door
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0x5C3A1E, roughness: 0.7 });
+    const doorGeo = new THREE.PlaneGeometry(1.3, 2.4);
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(x, y + 1.2, z + d/2 + 0.02);
+    scene.add(door);
   }
 
+  // === TRUCK ===
   function buildTruck(x, y, z) {
     const truckGroup = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: C.forest, roughness: 0.5, metalness: 0.15 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8, metalness: 0.1 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.15, metalness: 0.85 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x88BBEE, transparent: true, opacity: 0.5, roughness: 0.1, metalness: 0.3 });
 
-    // Bed
-    const bedGeo = new THREE.BoxGeometry(6, 2, 2.5);
-    const bedMat = new THREE.MeshLambertMaterial({ color: C.forest });
-    const bed = new THREE.Mesh(bedGeo, bedMat);
-    bed.position.set(0, 1.5, 0);
+    // Flatbed
+    const bedGeo = new THREE.BoxGeometry(6.5, 0.3, 2.6);
+    const bed = new THREE.Mesh(bedGeo, bodyMat);
+    bed.position.set(1, 1.3, 0);
     bed.castShadow = true;
     truckGroup.add(bed);
 
+    // Bed rails
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.4 });
+    [[-1.3, 2.0, 1.35], [-1.3, 2.0, -1.35], [3.2, 2.0, 1.35], [3.2, 2.0, -1.35]].forEach(p => {
+      const railGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.2, 8);
+      const rail = new THREE.Mesh(railGeo, railMat);
+      rail.position.set(p[0], p[1], p[2]);
+      truckGroup.add(rail);
+    });
+    // Horizontal rails
+    [1.35, -1.35].forEach(zz => {
+      const hGeo = new THREE.CylinderGeometry(0.04, 0.04, 4.8, 8);
+      const h = new THREE.Mesh(hGeo, railMat);
+      h.rotation.z = Math.PI / 2;
+      h.position.set(1, 2.5, zz);
+      truckGroup.add(h);
+    });
+
     // Cab
-    const cabGeo = new THREE.BoxGeometry(2.5, 2.2, 2.5);
-    const cab = new THREE.Mesh(cabGeo, bedMat);
-    cab.position.set(-3.8, 1.6, 0);
+    const cabGeo = new THREE.BoxGeometry(2.8, 2.4, 2.6);
+    const cab = new THREE.Mesh(cabGeo, bodyMat);
+    cab.position.set(-3.3, 1.8, 0);
     cab.castShadow = true;
     truckGroup.add(cab);
 
+    // Cab roof slight curve — box on top
+    const cabTopGeo = new THREE.BoxGeometry(2.6, 0.2, 2.5);
+    const cabTop = new THREE.Mesh(cabTopGeo, bodyMat);
+    cabTop.position.set(-3.3, 3.05, 0);
+    truckGroup.add(cabTop);
+
     // Windshield
-    const wsGeo = new THREE.PlaneGeometry(0.1, 1.2, 2.2);
-    const wsMat = new THREE.MeshLambertMaterial({ color: 0x88BBEE, transparent: true, opacity: 0.6 });
-    const ws = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.0), wsMat);
-    ws.position.set(-5.06, 2.0, 0);
+    const ws = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.4), glassMat);
+    ws.position.set(-4.66, 2.3, 0);
     ws.rotation.y = Math.PI / 2;
     truckGroup.add(ws);
 
-    // Wheels
-    const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 12);
-    const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-    [[-4, 0.5, 1.5], [-4, 0.5, -1.5], [1, 0.5, 1.5], [1, 0.5, -1.5], [2.5, 0.5, 1.5], [2.5, 0.5, -1.5]].forEach(p => {
-      const w = new THREE.Mesh(wheelGeo, wheelMat);
-      w.position.set(p[0], p[1], p[2]);
-      w.rotation.x = Math.PI / 2;
-      truckGroup.add(w);
+    // Side windows
+    const swGeo = new THREE.PlaneGeometry(1.5, 1.0);
+    [-1.32, 1.32].forEach(zz => {
+      const sw = new THREE.Mesh(swGeo, glassMat);
+      sw.position.set(-3.3, 2.3, zz);
+      sw.rotation.y = zz > 0 ? 0 : Math.PI;
+      truckGroup.add(sw);
     });
 
-    // Logo text area (khaki rectangle on side)
-    const logoGeo = new THREE.PlaneGeometry(4, 0.8);
-    const logoMat = new THREE.MeshLambertMaterial({ color: C.khaki });
+    // Headlights
+    [-0.8, 0.8].forEach(zz => {
+      const hlGeo = new THREE.CircleGeometry(0.2, 12);
+      const hl = new THREE.Mesh(hlGeo, chromeMat);
+      hl.position.set(-4.66, 1.5, zz);
+      hl.rotation.y = -Math.PI / 2;
+      truckGroup.add(hl);
+    });
+
+    // Bumper
+    const bumperGeo = new THREE.BoxGeometry(0.15, 0.4, 2.8);
+    const bumper = new THREE.Mesh(bumperGeo, chromeMat);
+    bumper.position.set(-4.72, 1.0, 0);
+    truckGroup.add(bumper);
+
+    // Wheels — more detailed
+    const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.5, 20);
+    const wheelPositions = [[-4, 0.55, 1.5], [-4, 0.55, -1.5], [0.5, 0.55, 1.5], [0.5, 0.55, -1.5], [2.5, 0.55, 1.5], [2.5, 0.55, -1.5]];
+    wheelPositions.forEach(p => {
+      const w = new THREE.Mesh(wheelGeo, blackMat);
+      w.position.set(p[0], p[1], p[2]);
+      w.rotation.x = Math.PI / 2;
+      w.castShadow = true;
+      truckGroup.add(w);
+      // Hub cap
+      const hubGeo = new THREE.CircleGeometry(0.3, 12);
+      const hub = new THREE.Mesh(hubGeo, chromeMat);
+      hub.position.set(p[0], p[1], p[2] + (p[2] > 0 ? 0.26 : -0.26));
+      hub.rotation.x = p[2] > 0 ? 0 : Math.PI;
+      truckGroup.add(hub);
+    });
+
+    // Toolboxes on bed
+    const tbMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.4, metalness: 0.5 });
+    const tbGeo = new THREE.BoxGeometry(1.2, 0.8, 2.2);
+    [-0.5, 2.5].forEach(xx => {
+      const tb = new THREE.Mesh(tbGeo, tbMat);
+      tb.position.set(xx, 1.85, 0);
+      tb.castShadow = true;
+      truckGroup.add(tb);
+    });
+
+    // Logo panel on side
+    const logoGeo = new THREE.PlaneGeometry(4.5, 0.9);
+    const logoMat = new THREE.MeshStandardMaterial({ color: C.khaki, roughness: 0.6 });
     const logo = new THREE.Mesh(logoGeo, logoMat);
-    logo.position.set(0, 2.0, 1.26);
+    logo.position.set(-3.3, 1.8, 1.32);
     truckGroup.add(logo);
 
     truckGroup.position.set(x, y, z);
@@ -498,147 +979,506 @@
     scene.add(truckGroup);
   }
 
+  // === GEAR ON GROUND ===
   function buildGearOnGround() {
     const gearGroup = new THREE.Group();
 
-    // Ground tarp
-    const tarpGeo = new THREE.PlaneGeometry(4, 3);
-    const tarpMat = new THREE.MeshLambertMaterial({ color: C.khaki, side: THREE.DoubleSide });
+    // Tarp
+    const tarpMat = new THREE.MeshStandardMaterial({ color: C.khaki, roughness: 0.8, side: THREE.DoubleSide });
+    const tarpGeo = new THREE.PlaneGeometry(4.5, 3.5, 8, 8);
+    // Slight wrinkles
+    const tpPos = tarpGeo.attributes.position;
+    for (let i = 0; i < tpPos.count; i++) {
+      tpPos.setZ(i, Math.sin(tpPos.getX(i)*2) * 0.02 + Math.cos(tpPos.getY(i)*3) * 0.015);
+    }
+    tarpGeo.computeVertexNormals();
     const tarp = new THREE.Mesh(tarpGeo, tarpMat);
     tarp.rotation.x = -Math.PI / 2;
-    tarp.position.y = 0.02;
+    tarp.position.y = 0.03;
     gearGroup.add(tarp);
 
-    // Harness (torus)
-    const harnGeo = new THREE.TorusGeometry(0.4, 0.08, 8, 16);
-    const harnMat = new THREE.MeshLambertMaterial({ color: C.orange });
-    const harness = new THREE.Mesh(harnGeo, harnMat);
-    harness.position.set(-0.8, 0.15, -0.5);
+    // Harness — multiple straps
+    const strapMat = new THREE.MeshStandardMaterial({ color: C.orange, roughness: 0.6, metalness: 0.1 });
+    // Main loop
+    const harnGeo = new THREE.TorusGeometry(0.45, 0.06, 12, 24);
+    const harness = new THREE.Mesh(harnGeo, strapMat);
+    harness.position.set(-0.8, 0.12, -0.5);
     harness.rotation.x = Math.PI / 2;
     gearGroup.add(harness);
+    // Leg loops
+    [-0.3, 0.3].forEach(dz => {
+      const legGeo = new THREE.TorusGeometry(0.2, 0.04, 10, 16);
+      const leg = new THREE.Mesh(legGeo, strapMat);
+      leg.position.set(-0.8, 0.08, -0.5 + dz);
+      leg.rotation.x = Math.PI / 2;
+      gearGroup.add(leg);
+    });
+    // Connecting straps
+    const cStrapGeo = new THREE.BoxGeometry(0.06, 0.02, 0.5);
+    const cStrap = new THREE.Mesh(cStrapGeo, strapMat);
+    cStrap.position.set(-0.8, 0.1, -0.5);
+    gearGroup.add(cStrap);
 
-    // Rope coil
-    const ropeGeo = new THREE.TorusGeometry(0.5, 0.06, 8, 20);
-    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
-    const rope = new THREE.Mesh(ropeGeo, ropeMat);
-    rope.position.set(0.5, 0.12, -0.3);
-    rope.rotation.x = Math.PI / 2;
-    gearGroup.add(rope);
-
-    // Carabiners (small torus)
-    for (let i = 0; i < 3; i++) {
-      const cGeo = new THREE.TorusGeometry(0.1, 0.02, 6, 12);
-      const cMat = new THREE.MeshLambertMaterial({ color: C.metal });
-      const carabiner = new THREE.Mesh(cGeo, cMat);
-      carabiner.position.set(-0.3 + i * 0.3, 0.08, 0.5);
-      carabiner.rotation.x = Math.PI / 3;
-      gearGroup.add(carabiner);
+    // Rope coil — actual coil geometry
+    const coilMat = new THREE.MeshStandardMaterial({ color: C.rope, roughness: 0.65, metalness: 0.05 });
+    for (let i = 0; i < 20; i++) {
+      const coilGeo = new THREE.TorusGeometry(0.45 + i * 0.008, 0.035, 8, 24);
+      const coil = new THREE.Mesh(coilGeo, coilMat);
+      coil.position.set(0.6, 0.08 + i * 0.04, -0.3);
+      coil.rotation.x = Math.PI / 2;
+      gearGroup.add(coil);
     }
 
-    // Chainsaw
-    const sawGroup = buildChainsaw();
-    sawGroup.position.set(1.2, 0.15, 0.6);
-    sawGroup.rotation.y = 0.4;
-    gearGroup.add(sawGroup);
+    // Carabiners — metallic torus with gate
+    const carabMat = new THREE.MeshStandardMaterial({ color: 0xBBBBBB, roughness: 0.2, metalness: 0.85 });
+    for (let i = 0; i < 4; i++) {
+      const cGeo = new THREE.TorusGeometry(0.12, 0.02, 8, 16, Math.PI * 1.6);
+      const carab = new THREE.Mesh(cGeo, carabMat);
+      carab.position.set(-0.2 + i * 0.35, 0.06, 0.7);
+      carab.rotation.x = Math.PI / 3 + i * 0.2;
+      carab.rotation.y = i * 0.3;
+      carab.castShadow = true;
+      gearGroup.add(carab);
+      // Gate (small cylinder)
+      const gateGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.15, 6);
+      const gate = new THREE.Mesh(gateGeo, carabMat);
+      gate.position.set(-0.2 + i * 0.35 + 0.1, 0.06, 0.7);
+      gate.rotation.z = Math.PI / 3;
+      gearGroup.add(gate);
+    }
+
+    // Chainsaw (detailed)
+    const saw = buildDetailedChainsaw();
+    saw.position.set(1.4, 0.2, 0.6);
+    saw.rotation.y = 0.4;
+    gearGroup.add(saw);
 
     gearGroup.position.set(2, 0, 1);
     scene.add(gearGroup);
   }
 
-  function buildChainsaw() {
+  // === DETAILED CHAINSAW ===
+  function buildDetailedChainsaw() {
     const g = new THREE.Group();
+    const orangeMat = new THREE.MeshStandardMaterial({ color: C.orange, roughness: 0.45, metalness: 0.15 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.7, metalness: 0.1 });
+    const silverMat = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.2, metalness: 0.8 });
+    const chainMat = new THREE.MeshStandardMaterial({ color: C.chainColor, roughness: 0.5, metalness: 0.6 });
 
-    // Body
-    const bodyGeo = new THREE.BoxGeometry(0.8, 0.35, 0.3);
-    const bodyMat = new THREE.MeshLambertMaterial({ color: C.orange });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    // Engine housing (body)
+    const bodyGeo = new THREE.BoxGeometry(0.9, 0.4, 0.35, 2, 2, 2);
+    const body = new THREE.Mesh(bodyGeo, orangeMat);
+    body.castShadow = true;
     g.add(body);
 
-    // Bar
-    const barGeo = new THREE.BoxGeometry(1.0, 0.05, 0.15);
-    const barMat = new THREE.MeshLambertMaterial({ color: C.metal });
-    const bar = new THREE.Mesh(barGeo, barMat);
-    bar.position.set(0.85, -0.05, 0);
+    // Engine top cover (rounded)
+    const topGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.9, 12);
+    const top = new THREE.Mesh(topGeo, orangeMat);
+    top.rotation.z = Math.PI / 2;
+    top.position.set(0, 0.28, 0);
+    g.add(top);
+
+    // Starter handle recess
+    const startGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.04, 12);
+    const starter = new THREE.Mesh(startGeo, blackMat);
+    starter.position.set(-0.3, 0.12, 0.18);
+    g.add(starter);
+
+    // Guide bar
+    const barGeo = new THREE.BoxGeometry(1.2, 0.06, 0.12);
+    const bar = new THREE.Mesh(barGeo, silverMat);
+    bar.position.set(0.95, -0.05, 0);
+    bar.castShadow = true;
     g.add(bar);
 
-    // Handle
-    const handleGeo = new THREE.BoxGeometry(0.15, 0.3, 0.15);
-    const handleMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-    const handle = new THREE.Mesh(handleGeo, handleMat);
-    handle.position.set(-0.25, 0.3, 0);
-    g.add(handle);
+    // Bar tip (rounded)
+    const tipGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.12, 12);
+    const tip = new THREE.Mesh(tipGeo, silverMat);
+    tip.position.set(1.55, -0.05, 0);
+    tip.rotation.x = Math.PI / 2;
+    g.add(tip);
+
+    // Chain — small segments along bar edge
+    const chainCount = 24;
+    for (let i = 0; i < chainCount; i++) {
+      const cx = 0.35 + (i / chainCount) * 1.2;
+      const cGeo = new THREE.BoxGeometry(0.04, 0.04, 0.15);
+      const topChain = new THREE.Mesh(cGeo, chainMat);
+      topChain.position.set(cx, -0.02, 0);
+      g.add(topChain);
+      const botChain = new THREE.Mesh(cGeo, chainMat);
+      botChain.position.set(cx, -0.08, 0);
+      g.add(botChain);
+    }
+
+    // Rear handle
+    const rHandleGeo = new THREE.BoxGeometry(0.15, 0.4, 0.18);
+    const rHandle = new THREE.Mesh(rHandleGeo, blackMat);
+    rHandle.position.set(-0.35, 0.35, 0);
+    g.add(rHandle);
+
+    // Top handle (wrap-around)
+    const tHandleGeo = new THREE.TorusGeometry(0.22, 0.035, 8, 12, Math.PI);
+    const tHandle = new THREE.Mesh(tHandleGeo, blackMat);
+    tHandle.position.set(0.1, 0.35, 0);
+    tHandle.rotation.z = Math.PI;
+    g.add(tHandle);
+
+    // Front hand guard
+    const guardGeo = new THREE.TorusGeometry(0.3, 0.025, 8, 16, Math.PI * 0.7);
+    const guard = new THREE.Mesh(guardGeo, blackMat);
+    guard.position.set(0.3, 0.25, 0);
+    guard.rotation.z = -Math.PI * 0.15;
+    g.add(guard);
+
+    // Sprocket cover (side)
+    const sprocketGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.38, 12);
+    const sprocket = new THREE.Mesh(sprocketGeo, silverMat);
+    sprocket.position.set(0.35, -0.02, 0);
+    sprocket.rotation.x = Math.PI / 2;
+    g.add(sprocket);
 
     return g;
   }
 
-  function buildRopes() {
-    // Main rigging rope along trunk
-    const ropeGeo = new THREE.CylinderGeometry(0.03, 0.03, TRUNK_HEIGHT, 6);
-    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
-    const mainRope = new THREE.Mesh(ropeGeo, ropeMat);
-    mainRope.position.set(TREE_X + TRUNK_RADIUS + 0.1, TRUNK_HEIGHT / 2, TREE_Z);
-    scene.add(mainRope);
+  // === JERMAINE ===
+  function buildJermaine() {
+    const g = new THREE.Group();
+    const skinMat = new THREE.MeshStandardMaterial({ color: C.skin, roughness: 0.7, metalness: 0.05 });
+    const poloMat = new THREE.MeshStandardMaterial({ color: C.redPolo, roughness: 0.6, metalness: 0.05 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: C.khakiPants, roughness: 0.7, metalness: 0.02 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8, metalness: 0.1 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x1A1A1A, roughness: 0.9, metalness: 0.05 });
 
-    // Secondary rope
-    const rope2 = new THREE.Mesh(ropeGeo, ropeMat);
-    rope2.position.set(TREE_X - 0.5, TRUNK_HEIGHT / 2, TREE_Z + TRUNK_RADIUS + 0.1);
-    scene.add(rope2);
+    // Legs
+    [-0.18, 0.18].forEach(dz => {
+      const legGeo = new THREE.CylinderGeometry(0.13, 0.14, 1.1, 10);
+      const leg = new THREE.Mesh(legGeo, pantsMat);
+      leg.position.set(0, 0.6, dz);
+      leg.castShadow = true;
+      g.add(leg);
+      // Shoes
+      const shoeGeo = new THREE.BoxGeometry(0.18, 0.1, 0.3);
+      const shoe = new THREE.Mesh(shoeGeo, shoeMat);
+      shoe.position.set(0.05, 0.05, dz);
+      shoe.castShadow = true;
+      g.add(shoe);
+    });
+
+    // Torso (polo shirt)
+    const torsoGeo = new THREE.CylinderGeometry(0.22, 0.25, 0.9, 12);
+    const torso = new THREE.Mesh(torsoGeo, poloMat);
+    torso.position.set(0, 1.6, 0);
+    torso.castShadow = true;
+    g.add(torso);
+
+    // Polo collar
+    const collarGeo = new THREE.TorusGeometry(0.2, 0.03, 6, 12, Math.PI * 1.4);
+    const collar = new THREE.Mesh(collarGeo, poloMat);
+    collar.position.set(0, 2.05, 0);
+    collar.rotation.x = Math.PI * 0.1;
+    g.add(collar);
+
+    // Arms
+    [-0.32, 0.32].forEach((dz, idx) => {
+      // Upper arm
+      const uaGeo = new THREE.CylinderGeometry(0.08, 0.1, 0.55, 8);
+      const ua = new THREE.Mesh(uaGeo, poloMat);
+      ua.position.set(0, 1.7, dz);
+      ua.rotation.x = dz > 0 ? 0.2 : -0.2;
+      g.add(ua);
+      // Forearm (skin)
+      const faGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.5, 8);
+      const fa = new THREE.Mesh(faGeo, skinMat);
+      fa.position.set(0, 1.3, dz + (dz > 0 ? 0.1 : -0.1));
+      g.add(fa);
+    });
+
+    // Right hand holding position (for chainsaw)
+    const rightHand = new THREE.Group();
+    rightHand.name = 'rightHand';
+    rightHand.position.set(0.15, 1.1, 0.4);
+    g.add(rightHand);
+
+    // Head
+    const headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.position.set(0, 2.3, 0);
+    head.castShadow = true;
+    g.add(head);
+
+    // Hair
+    const hairGeo = new THREE.SphereGeometry(0.23, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
+    const hair = new THREE.Mesh(hairGeo, hairMat);
+    hair.position.set(0, 2.32, 0);
+    g.add(hair);
+
+    // Eyes (simple dots)
+    [-0.07, 0.07].forEach(dz => {
+      const eyeGeo = new THREE.SphereGeometry(0.025, 8, 8);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+      const eye = new THREE.Mesh(eyeGeo, eyeMat);
+      eye.position.set(0.2, 2.33, dz);
+      g.add(eye);
+    });
+
+    // Smile
+    const smileGeo = new THREE.TorusGeometry(0.06, 0.01, 6, 12, Math.PI);
+    const smileMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+    const smile = new THREE.Mesh(smileGeo, smileMat);
+    smile.position.set(0.21, 2.22, 0);
+    smile.rotation.y = Math.PI / 2;
+    smile.rotation.x = Math.PI;
+    g.add(smile);
+
+    // Thumbs-up arm (hidden initially)
+    const thumbGroup = new THREE.Group();
+    thumbGroup.name = 'thumbsUp';
+    thumbGroup.visible = false;
+    // Fist
+    const fistGeo = new THREE.SphereGeometry(0.08, 8, 8);
+    const fist = new THREE.Mesh(fistGeo, skinMat);
+    fist.position.set(0.4, 2.0, -0.35);
+    thumbGroup.add(fist);
+    // Thumb
+    const thumbGeo = new THREE.CylinderGeometry(0.025, 0.03, 0.12, 6);
+    const thumb = new THREE.Mesh(thumbGeo, skinMat);
+    thumb.position.set(0.4, 2.1, -0.35);
+    thumbGroup.add(thumb);
+    // Arm
+    const tuArmGeo = new THREE.CylinderGeometry(0.07, 0.08, 0.5, 8);
+    const tuArm = new THREE.Mesh(tuArmGeo, poloMat);
+    tuArm.position.set(0.2, 1.8, -0.35);
+    tuArm.rotation.z = -0.5;
+    thumbGroup.add(tuArm);
+    g.add(thumbGroup);
+
+    g.position.set(0, 0, -3);
+    g.rotation.y = Math.PI * 0.05; // slightly turned toward camera
+    g.visible = false;
+    scene.add(g);
+    jermaine = g;
   }
 
+  // === FLYING CHAINSAW (for "The Catch") ===
+  function buildFlyingChainsaw() {
+    flyingChainsaw = buildDetailedChainsaw();
+    flyingChainsaw.scale.set(1.8, 1.8, 1.8);
+    flyingChainsaw.visible = false;
+    scene.add(flyingChainsaw);
+  }
+
+  // === ROPES ===
+  function buildRopes() {
+    const ropeMat = new THREE.MeshStandardMaterial({ color: C.rope, roughness: 0.65, metalness: 0.05 });
+
+    // Main climbing rope
+    const segments = 60;
+    const ropeGeo = new THREE.CylinderGeometry(0.04, 0.04, TRUNK_HEIGHT, 8, segments);
+    // Add slight sway
+    const rPos = ropeGeo.attributes.position;
+    for (let i = 0; i < rPos.count; i++) {
+      const y = rPos.getY(i);
+      rPos.setX(i, rPos.getX(i) + Math.sin(y * 0.15) * 0.15);
+      rPos.setZ(i, rPos.getZ(i) + Math.cos(y * 0.2) * 0.1);
+    }
+    ropeGeo.computeVertexNormals();
+    const mainRope = new THREE.Mesh(ropeGeo, ropeMat);
+    mainRope.position.set(TREE_X + TRUNK_RADIUS + 0.15, TRUNK_HEIGHT / 2, TREE_Z);
+    scene.add(mainRope);
+    allRopes.push(mainRope);
+
+    // Secondary rope
+    const rope2Geo = new THREE.CylinderGeometry(0.035, 0.035, TRUNK_HEIGHT * 0.8, 8, segments);
+    const r2Pos = rope2Geo.attributes.position;
+    for (let i = 0; i < r2Pos.count; i++) {
+      const y = r2Pos.getY(i);
+      r2Pos.setX(i, r2Pos.getX(i) + Math.sin(y * 0.12 + 1) * 0.12);
+      r2Pos.setZ(i, r2Pos.getZ(i) + Math.cos(y * 0.18 + 2) * 0.08);
+    }
+    rope2Geo.computeVertexNormals();
+    const rope2 = new THREE.Mesh(rope2Geo, ropeMat);
+    rope2.position.set(TREE_X - 0.4, TRUNK_HEIGHT * 0.4, TREE_Z + TRUNK_RADIUS + 0.15);
+    scene.add(rope2);
+    allRopes.push(rope2);
+
+    // Rigging rope (horizontal, from tree to anchor)
+    const rigGeo = new THREE.CylinderGeometry(0.03, 0.03, 12, 6);
+    const rig = new THREE.Mesh(rigGeo, ropeMat);
+    rig.position.set(TREE_X + 5, 34, TREE_Z);
+    rig.rotation.z = Math.PI / 2;
+    scene.add(rig);
+  }
+
+  // === GROUND CREW ===
   function buildGroundCrew() {
-    // Simple stick figures
     for (let i = 0; i < 2; i++) {
       const g = new THREE.Group();
+      const bodyMat = new THREE.MeshStandardMaterial({ color: C.forest, roughness: 0.6 });
+      const skinMat = new THREE.MeshStandardMaterial({ color: C.skinDark, roughness: 0.7 });
+      const hatMat = new THREE.MeshStandardMaterial({ color: C.orange, roughness: 0.5, metalness: 0.1 });
+
+      // Legs
+      [-0.15, 0.15].forEach(dz => {
+        const legGeo = new THREE.CylinderGeometry(0.1, 0.12, 1.0, 8);
+        const leg = new THREE.Mesh(legGeo, bodyMat);
+        leg.position.y = 0.55;
+        leg.position.z = dz;
+        leg.castShadow = true;
+        g.add(leg);
+      });
 
       // Body
-      const bodyGeo = new THREE.CylinderGeometry(0.15, 0.2, 2, 8);
-      const bodyMat = new THREE.MeshLambertMaterial({ color: C.forest });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.y = 1.5;
+      const bGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.9, 10);
+      const body = new THREE.Mesh(bGeo, bodyMat);
+      body.position.y = 1.55;
+      body.castShadow = true;
       g.add(body);
 
       // Head
-      const headGeo = new THREE.SphereGeometry(0.25, 8, 8);
-      const headMat = new THREE.MeshLambertMaterial({ color: 0xD4A574 });
-      const head = new THREE.Mesh(headGeo, headMat);
-      head.position.y = 2.8;
+      const headGeo = new THREE.SphereGeometry(0.2, 12, 12);
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.y = 2.2;
+      head.castShadow = true;
       g.add(head);
 
       // Hard hat
-      const hatGeo = new THREE.CylinderGeometry(0.3, 0.28, 0.15, 8);
-      const hatMat = new THREE.MeshLambertMaterial({ color: C.orange });
+      const hatGeo = new THREE.CylinderGeometry(0.25, 0.23, 0.14, 12);
       const hat = new THREE.Mesh(hatGeo, hatMat);
-      hat.position.y = 3.05;
+      hat.position.y = 2.42;
       g.add(hat);
+      // Hat brim
+      const brimGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.03, 12);
+      const brim = new THREE.Mesh(brimGeo, hatMat);
+      brim.position.y = 2.36;
+      g.add(brim);
 
-      g.position.set(4 + i * 3, 0, 3 + i * 2);
-      g.visible = false; // show during drop step
+      g.position.set(4 + i * 3.5, 0, 3 + i * 2);
+      g.visible = false;
       scene.add(g);
       groundCrewFigures.push(g);
     }
   }
 
-  // Falling limb (created on demand)
+  // === PARTICLES ===
+  function createLeafParticles() {
+    const count = 60;
+    for (let i = 0; i < count; i++) {
+      const leafTex = createLeafTexture();
+      const mat = new THREE.MeshStandardMaterial({
+        map: leafTex,
+        transparent: true,
+        alphaTest: 0.2,
+        side: THREE.DoubleSide,
+        roughness: 0.8,
+        depthWrite: false,
+      });
+      const size = 0.15 + Math.random() * 0.25;
+      const geo = new THREE.PlaneGeometry(size, size * 1.3);
+      const leaf = new THREE.Mesh(geo, mat);
+      leaf.position.set(
+        (Math.random() - 0.5) * 50,
+        5 + Math.random() * 40,
+        (Math.random() - 0.5) * 50
+      );
+      leaf.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+      scene.add(leaf);
+      leafParticles.push({
+        mesh: leaf,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -0.2 - Math.random() * 0.3,
+        vz: (Math.random() - 0.5) * 0.3,
+        rotSpeed: (Math.random() - 0.5) * 2,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function createHazeParticles() {
+    const count = 200;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i*3] = (Math.random() - 0.5) * 80;
+      positions[i*3+1] = Math.random() * 8;
+      positions[i*3+2] = (Math.random() - 0.5) * 80;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xFFE8CC,
+      size: 0.8,
+      transparent: true,
+      opacity: 0.15,
+      depthWrite: false,
+    });
+    hazeParticles = new THREE.Points(geo, mat);
+    scene.add(hazeParticles);
+  }
+
+  function createSawdustSystem() {
+    if (sawdustSystem) return;
+    const count = 100;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+    for (let i = 0; i < count; i++) {
+      positions[i*3] = 3.5 + (Math.random()-0.5)*0.5;
+      positions[i*3+1] = 35 + (Math.random()-0.5)*0.5;
+      positions[i*3+2] = (Math.random()-0.5)*0.5;
+      velocities.push({
+        x: (Math.random()-0.5)*3,
+        y: (Math.random()-0.5)*2,
+        z: (Math.random()-0.5)*3,
+      });
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xD4A054,
+      size: 0.12,
+      transparent: true,
+      opacity: 0.7,
+      depthWrite: false,
+    });
+    sawdustSystem = { points: new THREE.Points(geo, mat), velocities, active: false };
+    sawdustSystem.points.visible = false;
+    scene.add(sawdustSystem.points);
+  }
+
+  // === FALLING LIMB ===
   function createFallingLimb() {
+    const barkTex = createBarkTexture(128, 256);
+    const barkMat = new THREE.MeshStandardMaterial({ map: barkTex, roughness: 0.9, metalness: 0.02, color: 0x6A4830 });
     const g = new THREE.Group();
-    const bGeo = new THREE.CylinderGeometry(0.25, 0.5, 8, 8);
-    const bMat = new THREE.MeshLambertMaterial({ color: C.bark });
-    const branch = new THREE.Mesh(bGeo, bMat);
+
+    const bGeo = new THREE.CylinderGeometry(0.25, 0.55, 9, 12);
+    const branch = new THREE.Mesh(bGeo, barkMat);
     branch.rotation.z = Math.PI / 2;
+    branch.castShadow = true;
     g.add(branch);
 
-    // Leaves
-    for (let i = 0; i < 4; i++) {
-      const lGeo = new THREE.DodecahedronGeometry(1.2, 1);
-      const lMat = new THREE.MeshLambertMaterial({ color: C.leaf });
-      const leaf = new THREE.Mesh(lGeo, lMat);
-      leaf.position.set(2 + i * 1.5, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5);
-      g.add(leaf);
+    // Leaves on limb
+    for (let i = 0; i < 6; i++) {
+      const clusterGroup = new THREE.Group();
+      const planeCount = 6;
+      for (let k = 0; k < planeCount; k++) {
+        const leafTex = createLeafTexture();
+        const leafMat = new THREE.MeshStandardMaterial({
+          map: leafTex, transparent: true, alphaTest: 0.3,
+          side: THREE.DoubleSide, roughness: 0.7, color: C.leaf,
+        });
+        const size = 0.3 + Math.random() * 0.4;
+        const lf = new THREE.Mesh(new THREE.PlaneGeometry(size, size*1.3), leafMat);
+        lf.position.set((Math.random()-0.5)*1.5, (Math.random()-0.5)*1, (Math.random()-0.5)*1.5);
+        lf.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        clusterGroup.add(lf);
+      }
+      clusterGroup.position.set(2 + i * 1.2, (Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5);
+      g.add(clusterGroup);
     }
 
-    // Rope attached
-    const ropeGeo = new THREE.CylinderGeometry(0.02, 0.02, 35, 4);
-    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
+    // Rigging rope
+    const ropeMat = new THREE.MeshStandardMaterial({ color: C.rope, roughness: 0.65 });
+    const ropeGeo = new THREE.CylinderGeometry(0.025, 0.025, 35, 6);
     const rope = new THREE.Mesh(ropeGeo, ropeMat);
     rope.position.set(0, 17, 0);
     g.add(rope);
@@ -649,9 +1489,9 @@
     return g;
   }
 
-  // Saw at cut position
+  // === CUT SAW & GAP ===
   function createCutSaw() {
-    const g = buildChainsaw();
+    const g = buildDetailedChainsaw();
     g.scale.set(1.5, 1.5, 1.5);
     g.position.set(3, 35, 1.5);
     g.rotation.y = Math.PI * 0.7;
@@ -660,32 +1500,14 @@
     return g;
   }
 
-  // Cut gap indicator
   function createCutGap() {
+    const mat = new THREE.MeshStandardMaterial({ color: 0xFFE8B0, roughness: 0.4, metalness: 0.05, emissive: 0x332200, emissiveIntensity: 0.2 });
     const geo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
-    const mat = new THREE.MeshLambertMaterial({ color: 0xFFE0A0 });
     const gap = new THREE.Mesh(geo, mat);
     gap.position.set(3.5, 35, 0);
     gap.visible = false;
     scene.add(gap);
     return gap;
-  }
-
-  function createParticles() {
-    // Floating leaf/dust particles
-    const geo = new THREE.BufferGeometry();
-    const count = 80;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 40;
-      positions[i * 3 + 1] = Math.random() * 45;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const mat = new THREE.PointsMaterial({ color: C.khaki, size: 0.15, transparent: true, opacity: 0.4 });
-    const pts = new THREE.Points(geo, mat);
-    scene.add(pts);
-    particles.push(pts);
   }
 
   // === PROGRESS DOTS ===
@@ -707,10 +1529,12 @@
     });
   }
 
-  // === TEXT ===
-  function showText(title, body) {
-    textTitle.textContent = title;
-    textBody.textContent = body;
+  // === TEXT HELPERS ===
+  function showText(title, body, sfx, disclaimer) {
+    textTitle.textContent = title || '';
+    textBody.textContent = body || '';
+    textSfx.textContent = sfx || '';
+    textDisclaimer.textContent = disclaimer || '';
     textOverlay.classList.add('visible');
   }
 
@@ -731,7 +1555,8 @@
   // === CAMERA ===
   let camTarget = { x: 0, y: 0, z: 0 };
   let camLookTarget = { x: 0, y: 20, z: 0 };
-  let camLerp = 0.02;
+  let camLerp = 0.025;
+  let currentLookDir = new THREE.Vector3(0, 0, -1);
 
   function setCameraTarget(cx, cy, cz, tx, ty, tz) {
     camTarget = { x: cx, y: cy, z: cz };
@@ -740,22 +1565,18 @@
 
   function updateCamera() {
     if (orbitEnabled) {
-      // Orbit around look target
       const dist = 14;
       const ox = camLookTarget.x + Math.cos(orbitAngle) * dist * Math.cos(orbitPitch);
       const oy = camLookTarget.y + Math.sin(orbitPitch) * dist;
       const oz = camLookTarget.z + Math.sin(orbitAngle) * dist * Math.cos(orbitPitch);
-      camera.position.lerp(new THREE.Vector3(ox, oy, oz), 0.05);
+      camera.position.lerp(new THREE.Vector3(ox, oy, oz), 0.04);
       camera.lookAt(camLookTarget.x, camLookTarget.y, camLookTarget.z);
     } else {
       camera.position.lerp(new THREE.Vector3(camTarget.x, camTarget.y, camTarget.z), camLerp);
       const lookPos = new THREE.Vector3(camLookTarget.x, camLookTarget.y, camLookTarget.z);
-      // Smooth look
-      const currentDir = new THREE.Vector3();
-      camera.getWorldDirection(currentDir);
       const targetDir = lookPos.clone().sub(camera.position).normalize();
-      currentDir.lerp(targetDir, 0.05);
-      camera.lookAt(camera.position.clone().add(currentDir.multiplyScalar(10)));
+      currentLookDir.lerp(targetDir, 0.04);
+      camera.lookAt(camera.position.clone().add(currentLookDir.clone().multiplyScalar(10)));
     }
   }
 
@@ -771,28 +1592,70 @@
     ctaSection.classList.remove('visible');
     orbitEnabled = false;
     climbActive = false;
-    camLerp = 0.02;
+    camLerp = 0.025;
+    chainsawFlying = false;
 
-    // Hide ground crew by default
+    // Hide Jermaine by default (shown in step 0)
+    if (jermaine) jermaine.visible = false;
+    if (flyingChainsaw) flyingChainsaw.visible = false;
     groundCrewFigures.forEach(f => f.visible = false);
 
     const s = steps[step];
-
     if (s.cam) {
       setCameraTarget(s.cam.x, s.cam.y, s.cam.z, s.cam.tx, s.cam.ty, s.cam.tz);
     }
 
-    // Step-specific logic
     switch (step) {
-      case 0: // Ground level
+      case 0: // The Catch — Jermaine
+        if (jermaine) jermaine.visible = true;
+        catchPhase = 0;
+        camLerp = 0.03;
+        // Camera at face level, looking at Jermaine
+        setCameraTarget(0, 2.5, 2, 0, 2, -3);
+        setTimeout(() => {
+          showText('Day one. Jermaine hands you the saw.', '', '', '');
+          isTransitioning = false;
+          // Start the toss sequence
+          setTimeout(() => {
+            catchPhase = 1;
+            chainsawFlying = true;
+            chainsawFlyProgress = 0;
+            if (flyingChainsaw) {
+              flyingChainsaw.visible = true;
+              flyingChainsaw.position.set(0.15, 1.5, -2.5); // starts at Jermaine's hand level
+            }
+            showText('', '', '[CHAINSAW ROAR]', '');
+          }, 2500);
+          // Catch
+          setTimeout(() => {
+            catchPhase = 2;
+            chainsawFlying = false;
+            if (flyingChainsaw) flyingChainsaw.visible = false;
+            showText("Don't worry. He does this every morning.", '', '', '');
+          }, 4500);
+          // Thumbs up
+          setTimeout(() => {
+            catchPhase = 3;
+            if (jermaine) {
+              const tu = jermaine.getObjectByName('thumbsUp');
+              if (tu) tu.visible = true;
+            }
+            showText("Don't worry. He does this every morning.", '', '', 'Jermaine is not a licensed arborist. Or a real person.');
+            setTimeout(() => showContinue(), 1000);
+          }, 6000);
+        }, 800);
+        break;
+
+      case 1: // Assessment
+        camLerp = 0.02;
         setTimeout(() => {
           showText(s.title, s.body);
           setTimeout(() => showContinue(), 1500);
           isTransitioning = false;
-        }, 1000);
+        }, 1200);
         break;
 
-      case 1: // Gear up
+      case 2: // Gear
         setTimeout(() => {
           showText(s.title, s.body);
           setTimeout(() => showContinue(), 1500);
@@ -800,14 +1663,13 @@
         }, 1500);
         break;
 
-      case 2: // Climb
+      case 3: // Climb
         climbProgress = 0;
         climbActive = true;
         isTransitioning = false;
-        // Climb animates in the update loop
         break;
 
-      case 3: // Canopy
+      case 4: // The Office
         camLerp = 0.015;
         setTimeout(() => {
           showText(s.title, s.body);
@@ -824,22 +1686,26 @@
         }, 2000);
         break;
 
-      case 4: // The Cut
+      case 5: // The Cut
+        createSawdustSystem();
         if (!sawBlade) sawBlade = createCutSaw();
         if (!cutGap) cutGap = createCutGap();
         cutProgress = 0;
         cutStarted = false;
         setTimeout(() => {
-          showText(s.title, s.body);
+          showText(s.title, s.body, '[CHAINSAW ROAR]');
           sawBlade.visible = true;
           cutStarted = true;
+          if (sawdustSystem) {
+            sawdustSystem.points.visible = true;
+            sawdustSystem.active = true;
+          }
           isTransitioning = false;
-          // Auto advance after cut animation
           setTimeout(() => showContinue(), 4000);
         }, 1500);
         break;
 
-      case 5: // The Drop
+      case 6: // The Drop
         if (!fallingLimb) fallingLimb = createFallingLimb();
         limbFalling = true;
         limbY = 35;
@@ -848,17 +1714,18 @@
         groundCrewFigures.forEach(f => f.visible = true);
         if (sawBlade) sawBlade.visible = false;
         if (cutGap) cutGap.visible = false;
+        if (sawdustSystem) { sawdustSystem.points.visible = false; sawdustSystem.active = false; }
         setTimeout(() => {
           showText(s.title, s.body);
-          setTimeout(() => showContinue(), 3000);
+          setTimeout(() => showContinue(), 3500);
           isTransitioning = false;
         }, 2000);
         break;
 
-      case 6: // Closing
+      case 7: // Closing
         if (fallingLimb) fallingLimb.visible = false;
         groundCrewFigures.forEach(f => f.visible = false);
-        camLerp = 0.01;
+        camLerp = 0.012;
         setTimeout(() => {
           showText('', s.body);
           setTimeout(() => {
@@ -883,46 +1750,87 @@
     const dt = clock.getDelta();
     const t = clock.getElapsedTime();
 
-    // Particles drift
-    particles.forEach(p => {
-      const pos = p.geometry.attributes.position.array;
-      for (let i = 0; i < pos.length; i += 3) {
-        pos[i] += Math.sin(t + i) * 0.003;
-        pos[i + 1] -= 0.005;
-        if (pos[i + 1] < 0) pos[i + 1] = 40 + Math.random() * 5;
-      }
-      p.geometry.attributes.position.needsUpdate = true;
+    // Leaf rustle animation
+    allLeaves.forEach(l => {
+      l.mesh.position.y = l.baseY + Math.sin(t * 1.2 + l.phase) * 0.08;
+      l.mesh.rotation.y = Math.sin(t * 0.8 + l.phase) * 0.05;
     });
 
+    // Rope sway
+    allRopes.forEach((r, i) => {
+      r.rotation.x = Math.sin(t * 0.5 + i) * 0.015;
+      r.rotation.z = Math.cos(t * 0.7 + i * 2) * 0.01;
+    });
+
+    // Floating leaf particles
+    leafParticles.forEach(lp => {
+      lp.mesh.position.x += (lp.vx + Math.sin(t + lp.phase) * 0.1) * dt;
+      lp.mesh.position.y += lp.vy * dt;
+      lp.mesh.position.z += (lp.vz + Math.cos(t * 0.7 + lp.phase) * 0.08) * dt;
+      lp.mesh.rotation.x += lp.rotSpeed * dt;
+      lp.mesh.rotation.z += lp.rotSpeed * 0.5 * dt;
+      if (lp.mesh.position.y < 0) {
+        lp.mesh.position.y = 40 + Math.random() * 10;
+        lp.mesh.position.x = (Math.random() - 0.5) * 50;
+        lp.mesh.position.z = (Math.random() - 0.5) * 50;
+      }
+    });
+
+    // Haze particles drift
+    if (hazeParticles) {
+      const hPos = hazeParticles.geometry.attributes.position.array;
+      for (let i = 0; i < hPos.length; i += 3) {
+        hPos[i] += Math.sin(t * 0.1 + i) * 0.008;
+        hPos[i + 2] += Math.cos(t * 0.12 + i) * 0.006;
+      }
+      hazeParticles.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // Flying chainsaw animation (The Catch)
+    if (chainsawFlying && flyingChainsaw) {
+      chainsawFlyProgress += dt * 0.5;
+      const p = Math.min(chainsawFlyProgress, 1);
+      // Arc from Jermaine to camera
+      const startX = 0.15, startY = 1.5, startZ = -2.5;
+      const endX = 0, endY = 2.2, endZ = 1.5;
+      const arcHeight = 1.5;
+      flyingChainsaw.position.x = startX + (endX - startX) * p;
+      flyingChainsaw.position.y = startY + (endY - startY) * p + Math.sin(p * Math.PI) * arcHeight;
+      flyingChainsaw.position.z = startZ + (endZ - startZ) * p;
+      // Rotation — spinning slightly
+      flyingChainsaw.rotation.z = p * Math.PI * 1.5;
+      flyingChainsaw.rotation.x = Math.sin(p * Math.PI) * 0.5;
+      // Scale up as it approaches
+      const s = 1.8 + p * 1.5;
+      flyingChainsaw.scale.set(s, s, s);
+    }
+
     // Climb animation
-    if (climbActive && currentStep === 2) {
-      climbProgress += dt * 0.08; // speed of climb
+    if (climbActive && currentStep === 3) {
+      climbProgress += dt * 0.075;
       if (climbProgress > 1) climbProgress = 1;
 
       const height = climbProgress * 40;
       const camY = 2 + height;
-      // Look down to emphasize height, look slightly outward
-      const lookY = Math.max(0, camY - 10 - climbProgress * 15);
+      const lookY = Math.max(0, camY - 12 - climbProgress * 18);
 
-      setCameraTarget(2.5, camY, 3, 5, lookY, 5);
-      camLerp = 0.06;
+      setCameraTarget(2.2, camY, 2.8, 5, lookY, 5);
+      camLerp = 0.05;
 
-      // Height marker
       const ft = Math.round(height);
       if (ft > 0) {
         heightMarker.textContent = ft + ' ft';
         heightMarker.classList.add('visible');
       }
 
-      // Text overlays during climb
-      if (ft >= 8 && ft < 15) {
-        showText('', '');
-      } else if (ft >= 18 && ft < 24) {
+      if (ft >= 18 && ft < 26) {
         showText('', 'Most ladders stop here.');
       } else if (ft >= 30 && ft < 36) {
         showText('', '');
       } else if (ft >= 38) {
         showText('', "We're just getting started.");
+      } else {
+        hideText();
       }
 
       if (climbProgress >= 1) {
@@ -935,32 +1843,52 @@
     }
 
     // Cut animation
-    if (cutStarted && currentStep === 4) {
-      cutProgress += dt * 0.25;
+    if (cutStarted && currentStep === 5) {
+      cutProgress += dt * 0.22;
       if (cutProgress > 1) cutProgress = 1;
 
-      // Vibrate saw
       if (sawBlade) {
-        sawBlade.position.y = 35 + Math.sin(t * 30) * 0.03;
-        sawBlade.position.x = 3 + Math.sin(t * 25) * 0.02;
+        sawBlade.position.y = 35 + Math.sin(t * 35) * 0.025;
+        sawBlade.position.x = 3 + Math.sin(t * 28) * 0.015;
       }
 
-      // Show cut gap growing
       if (cutGap && cutProgress > 0.2) {
         cutGap.visible = true;
-        cutGap.scale.x = Math.min(cutProgress * 1.5, 1);
+        cutGap.scale.x = Math.min((cutProgress - 0.2) * 1.5, 1);
+      }
+
+      // Sawdust particles
+      if (sawdustSystem && sawdustSystem.active) {
+        const sPos = sawdustSystem.points.geometry.attributes.position.array;
+        for (let i = 0; i < sawdustSystem.velocities.length; i++) {
+          const v = sawdustSystem.velocities[i];
+          sPos[i*3] += v.x * dt;
+          sPos[i*3+1] += v.y * dt - 1.5 * dt;
+          sPos[i*3+2] += v.z * dt;
+          // Reset particles
+          if (sPos[i*3+1] < 30) {
+            sPos[i*3] = 3.5 + (Math.random()-0.5)*0.4;
+            sPos[i*3+1] = 35 + (Math.random()-0.5)*0.3;
+            sPos[i*3+2] = (Math.random()-0.5)*0.4;
+            v.x = (Math.random()-0.5)*3;
+            v.y = (Math.random()-0.5)*2;
+            v.z = (Math.random()-0.5)*3;
+          }
+        }
+        sawdustSystem.points.geometry.attributes.position.needsUpdate = true;
       }
     }
 
     // Falling limb
     if (limbFalling && fallingLimb) {
-      limbY -= dt * 12; // fall speed
-      if (limbY < 3) {
-        limbY = 3;
+      limbY -= dt * 14;
+      if (limbY < 2) {
+        limbY = 2;
         limbFalling = false;
       }
       fallingLimb.position.y = limbY;
-      fallingLimb.rotation.z += dt * 0.3;
+      fallingLimb.rotation.z += dt * 0.4;
+      fallingLimb.rotation.x += dt * 0.15;
     }
 
     updateCamera();
@@ -973,7 +1901,6 @@
     nextStep();
   });
 
-  // Touch/mouse for orbit
   function onPointerDown(e) {
     mouseDown = true;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
@@ -994,7 +1921,6 @@
   }
   function onPointerUp() { mouseDown = false; }
 
-  renderer ? null : null; // ensure we wait
   document.addEventListener('mousedown', onPointerDown);
   document.addEventListener('mousemove', onPointerMove);
   document.addEventListener('mouseup', onPointerUp);
@@ -1002,21 +1928,19 @@
   document.addEventListener('touchmove', onPointerMove, { passive: true });
   document.addEventListener('touchend', onPointerUp);
 
-  // Resize
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // Keyboard
   document.addEventListener('keydown', (e) => {
     if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
       nextStep();
     }
   });
 
-  // Init
+  // === GO ===
   init();
 })();
 </script>
