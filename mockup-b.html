@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green America Tree Care — Atlanta's Tree Crew</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; font-size: 16px; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #0B1D0F;
+    background: #F5F1EB;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ── Typography ── */
+  h1, h2, h3, h4 { font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+  .font-serif { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 400; }
+
+  /* ── Utility ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+  .text-orange { color: #E85D04; }
+  .text-khaki  { color: #C9B99A; }
+  .text-green  { color: #1B4332; }
+  .text-white  { color: #F5F1EB; }
+  .bg-green    { background: #1B4332; }
+  .bg-dark     { background: #0B1D0F; }
+  .bg-offwhite { background: #F5F1EB; }
+  .bg-khaki    { background: #C9B99A; }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(11, 29, 15, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1rem 0;
+    transition: background 0.3s;
+  }
+  nav .container {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    font-size: 1.25rem; font-weight: 800; color: #F5F1EB;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .nav-logo span { color: #E85D04; }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    color: #C9B99A; font-size: 0.85rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: #F5F1EB; }
+  .nav-cta {
+    background: #E85D04 !important; color: #F5F1EB !important;
+    padding: 0.6rem 1.4rem; border-radius: 4px;
+    font-weight: 700 !important;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: #d14f00 !important; }
+  .nav-toggle { display: none; background: none; border: none; cursor: pointer; }
+  .nav-toggle span {
+    display: block; width: 24px; height: 2px; background: #F5F1EB;
+    margin: 5px 0; transition: 0.3s;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center;
+    background: #0B1D0F; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, #0B1D0F 0%, #1B4332 50%, #0B1D0F 100%);
+    opacity: 0.7;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    padding: 8rem 0 6rem;
+  }
+  .hero-text h1 {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    color: #F5F1EB;
+    margin-bottom: 1.5rem;
+  }
+  .hero-text h1 .accent {
+    display: block; color: #E85D04;
+  }
+  .hero-tagline {
+    font-size: 1.25rem; color: #C9B99A; max-width: 480px;
+    margin-bottom: 2.5rem; line-height: 1.7;
+  }
+  .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-block; padding: 1rem 2.2rem; font-size: 0.95rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    border-radius: 4px; border: 2px solid transparent;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .btn-primary { background: #E85D04; color: #F5F1EB; border-color: #E85D04; }
+  .btn-primary:hover { background: #d14f00; border-color: #d14f00; }
+  .btn-outline { background: transparent; color: #F5F1EB; border-color: #C9B99A; }
+  .btn-outline:hover { background: #C9B99A; color: #0B1D0F; }
+  .btn-dark { background: #1B4332; color: #F5F1EB; border-color: #1B4332; }
+  .btn-dark:hover { background: #0B1D0F; border-color: #0B1D0F; }
+
+  .hero-image {
+    position: relative; height: 500px;
+    background: #1B4332; border-radius: 8px; overflow: hidden;
+  }
+  .hero-image-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #C9B99A; font-size: 0.9rem; text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .hero-image-placeholder .icon-tree {
+    font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;
+  }
+  .hero-badge {
+    position: absolute; bottom: -1.5rem; left: 2rem;
+    background: #E85D04; color: #F5F1EB;
+    padding: 1rem 1.5rem; border-radius: 4px;
+    font-weight: 800; font-size: 0.85rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  }
+
+  /* ── Section Shared ── */
+  section { position: relative; }
+  .section-label {
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.15em; color: #E85D04; margin-bottom: 1rem;
+  }
+  .section-heading {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    margin-bottom: 1.5rem;
+  }
+  .section-sub {
+    font-size: 1.15rem; line-height: 1.7; max-width: 560px;
+  }
+
+  /* ── Diagonal clip ── */
+  .clip-top {
+    clip-path: polygon(0 4vw, 100% 0, 100% 100%, 0 100%);
+    margin-top: -4vw; padding-top: calc(4vw + 5rem);
+  }
+  .clip-bottom {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4vw), 0 100%);
+    padding-bottom: calc(4vw + 5rem);
+  }
+
+  /* ── Services ── */
+  .services { padding: 7rem 0; background: #F5F1EB; }
+  .services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; margin-top: 3rem;
+  }
+  .service-card {
+    background: #fff; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 2px 20px rgba(11,29,15,0.06);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .service-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(11,29,15,0.12);
+  }
+  .service-img {
+    height: 200px; background: #1B4332;
+    display: flex; align-items: center; justify-content: center;
+    color: #C9B99A; font-size: 3rem;
+  }
+  .service-body { padding: 1.5rem; }
+  .service-body h3 {
+    font-size: 1.25rem; margin-bottom: 0.5rem; color: #0B1D0F;
+  }
+  .service-body p {
+    font-size: 0.95rem; color: #555; line-height: 1.6;
+  }
+
+  /* ── Ridealong ── */
+  .ridealong {
+    background: #1B4332; color: #F5F1EB;
+    padding: 0; overflow: hidden;
+  }
+  .ridealong-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    min-height: 600px;
+  }
+  .ridealong-image {
+    background: #0B1D0F;
+    display: flex; align-items: center; justify-content: center;
+    color: #C9B99A; font-size: 0.85rem; text-transform: uppercase;
+    letter-spacing: 0.1em; min-height: 400px;
+  }
+  .ridealong-content {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 4rem 3rem;
+  }
+  .ridealong-content .section-heading { color: #F5F1EB; }
+  .ridealong-content .section-sub { color: #C9B99A; margin-bottom: 2rem; }
+  .ridealong-features {
+    list-style: none; margin-bottom: 2.5rem;
+  }
+  .ridealong-features li {
+    padding: 0.6rem 0; font-size: 1rem; color: #F5F1EB;
+    border-bottom: 1px solid rgba(201,185,154,0.15);
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .ridealong-features li::before {
+    content: '→'; color: #E85D04; font-weight: 800;
+  }
+
+  /* ── Crew ── */
+  .crew { padding: 7rem 0; background: #F5F1EB; }
+  .crew-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; margin-top: 3rem;
+  }
+  .crew-card { text-align: center; }
+  .crew-photo {
+    width: 180px; height: 180px; border-radius: 50%; margin: 0 auto 1.5rem;
+    background: #1B4332;
+    display: flex; align-items: center; justify-content: center;
+    color: #C9B99A; font-size: 2.5rem; font-weight: 800;
+  }
+  .crew-card h3 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+  .crew-card .role {
+    font-size: 0.85rem; color: #E85D04; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.75rem;
+  }
+  .crew-card p { font-size: 0.9rem; color: #555; max-width: 280px; margin: 0 auto; }
+
+  /* ── Stats ── */
+  .stats {
+    background: #0B1D0F; padding: 5rem 0;
+    clip-path: polygon(0 0, 100% 3vw, 100% calc(100% - 3vw), 0 100%);
+    margin: -3vw 0;
+  }
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 2rem; text-align: center;
+  }
+  .stat-item .number {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900; color: #E85D04;
+    line-height: 1;
+  }
+  .stat-item .label {
+    font-size: 0.85rem; color: #C9B99A;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+  }
+
+  /* ── Storm ── */
+  .storm {
+    background: #0B1D0F; color: #F5F1EB;
+    padding: 6rem 0; position: relative;
+    overflow: hidden;
+  }
+  .storm::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(135deg, transparent 0%, rgba(232,93,4,0.08) 100%);
+  }
+  .storm-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    position: relative; z-index: 2;
+  }
+  .storm-text .section-label { color: #E85D04; }
+  .storm-text .section-heading { color: #F5F1EB; }
+  .storm-text .section-sub { color: #C9B99A; margin-bottom: 1.5rem; }
+  .storm-text .storm-phone {
+    font-size: 2rem; font-weight: 900; color: #E85D04;
+    margin-bottom: 0.5rem;
+  }
+  .storm-text .storm-note {
+    font-size: 0.9rem; color: #C9B99A;
+  }
+  .storm-visual {
+    background: rgba(27,67,50,0.3); border-radius: 8px;
+    border: 1px solid rgba(201,185,154,0.15);
+    padding: 3rem; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+  }
+  .storm-icon { font-size: 4rem; }
+  .storm-visual h3 { font-size: 1.5rem; color: #F5F1EB; }
+  .storm-visual p { color: #C9B99A; font-size: 0.95rem; max-width: 340px; }
+
+  /* ── Testimonials ── */
+  .testimonials { padding: 7rem 0; background: #F5F1EB; }
+  .testimonials-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 2rem; margin-top: 3rem;
+  }
+  .testimonial-card {
+    background: #fff; border-radius: 8px; padding: 2rem;
+    box-shadow: 0 2px 20px rgba(11,29,15,0.06);
+    position: relative;
+  }
+  .testimonial-card::before {
+    content: '"'; position: absolute; top: 0.5rem; left: 1.5rem;
+    font-size: 4rem; color: #E85D04; opacity: 0.2;
+    font-family: Georgia, serif; line-height: 1;
+  }
+  .testimonial-card blockquote {
+    font-size: 1rem; line-height: 1.7; color: #333;
+    margin-bottom: 1.25rem; position: relative; z-index: 1;
+  }
+  .testimonial-card .author {
+    font-size: 0.85rem; font-weight: 700; color: #0B1D0F;
+  }
+  .testimonial-card .location {
+    font-size: 0.8rem; color: #888;
+  }
+
+  /* ── CTA ── */
+  .cta {
+    background: #1B4332; padding: 6rem 0; text-align: center;
+    clip-path: polygon(0 4vw, 100% 0, 100% 100%, 0 100%);
+    margin-top: -4vw; padding-top: calc(4vw + 6rem);
+  }
+  .cta .section-heading {
+    color: #F5F1EB; max-width: 700px; margin: 0 auto 1rem;
+  }
+  .cta .section-sub {
+    color: #C9B99A; max-width: 500px; margin: 0 auto 2.5rem;
+  }
+  .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .cta-phone {
+    font-size: 1.5rem; font-weight: 900; color: #E85D04;
+    margin-top: 2rem;
+  }
+
+  /* ── Footer ── */
+  footer {
+    background: #0B1D0F; color: #C9B99A; padding: 3rem 0;
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1.5rem;
+  }
+  .footer-logo {
+    font-weight: 800; font-size: 1.1rem; color: #F5F1EB;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .footer-logo span { color: #E85D04; }
+  .footer-info { font-size: 0.85rem; text-align: right; }
+  .footer-info a { color: #E85D04; transition: color 0.2s; }
+  .footer-info a:hover { color: #F5F1EB; }
+  .footer-bottom {
+    text-align: center; margin-top: 2rem; padding-top: 1.5rem;
+    border-top: 1px solid rgba(201,185,154,0.15);
+    font-size: 0.8rem; color: #666;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 1024px) {
+    .hero-content { grid-template-columns: 1fr; gap: 2rem; }
+    .hero-image { height: 350px; }
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .ridealong-grid { grid-template-columns: 1fr; }
+    .ridealong-image { min-height: 300px; }
+    .storm-inner { grid-template-columns: 1fr; }
+    .crew-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem 1rem; }
+    .testimonials-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(11,29,15,0.97); padding: 1.5rem 2rem;
+      gap: 1rem;
+    }
+    .nav-toggle { display: block; }
+    .hero { min-height: auto; padding: 2rem 0; }
+    .hero-content { padding: 7rem 0 4rem; }
+    .hero-text h1 { font-size: 2.5rem; }
+    .hero-image { height: 260px; }
+    .hero-badge { position: relative; bottom: auto; left: auto; margin-top: 1rem; display: inline-block; }
+    .services-grid,
+    .crew-grid,
+    .testimonials-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .ridealong-content { padding: 3rem 2rem; }
+    .section-heading { font-size: 2rem; }
+    .clip-top, .clip-bottom { clip-path: none; margin-top: 0; padding-top: 5rem; padding-bottom: 5rem; }
+    .stats { clip-path: none; margin: 0; }
+    .cta { clip-path: none; margin-top: 0; padding-top: 5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAV ═══════ -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-logo">Green America<span>.</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#services">Services</a>
+      <a href="#ridealong">Ridealong</a>
+      <a href="#crew">Crew</a>
+      <a href="#storm">Storm</a>
+      <a href="tel:7705608656" class="nav-cta">Call Now</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1>
+          Some people sit in traffic.
+          <span class="accent">We sit in canopy.</span>
+        </h1>
+        <p class="hero-tagline">
+          Atlanta's tree crew. Climbers, riggers, and certified arborists doing dangerous work well — because your property deserves someone who gives a damn.
+        </p>
+        <div class="hero-buttons">
+          <a href="tel:7705608656" class="btn btn-primary">Call (770) 560-8656</a>
+          <a href="#ridealong" class="btn btn-outline">Book a Ridealong</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="hero-image-placeholder">
+          <div class="icon-tree">🌲</div>
+          Climber in canopy<br>action shot
+        </div>
+        <div class="hero-badge">Serving Metro Atlanta Since 2010</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SERVICES ═══════ -->
+<section class="services" id="services">
+  <div class="container">
+    <div class="section-label">What We Do</div>
+    <h2 class="section-heading text-green">Trees are our trade.<br>Precision is the point.</h2>
+    <p class="section-sub">Every job is a judgment call. We make the right ones.</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-img">🪓</div>
+        <div class="service-body">
+          <h3>Tree Removal</h3>
+          <p>Tight lots, power lines, your neighbor's fence three feet away. We drop trees where they need to go — and nowhere else.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-img">✂️</div>
+        <div class="service-body">
+          <h3>Pruning &amp; Trimming</h3>
+          <p>Structural pruning. Crown reduction. Deadwood removal. Thoughtful cuts that keep your trees healthy and your roof intact.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-img">🪵</div>
+        <div class="service-body">
+          <h3>Stump Grinding</h3>
+          <p>That stump's been there long enough. We grind it down, clean it up, and leave you flat ground.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-img">⚡</div>
+        <div class="service-body">
+          <h3>Emergency Response</h3>
+          <p>Storm rolled through at 2 AM? Tree on your house? We answer the phone. Always.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-img">🔬</div>
+        <div class="service-body">
+          <h3>Arborist Assessments</h3>
+          <p>Certified arborists who tell you what's actually going on — not what sells the most work.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <div class="service-img">🏗️</div>
+        <div class="service-body">
+          <h3>Lot Clearing</h3>
+          <p>Building something? We clear the way. Selective or total — your call, done right.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ RIDEALONG ═══════ -->
+<section class="ridealong" id="ridealong">
+  <div class="ridealong-grid">
+    <div class="ridealong-image">
+      <div style="text-align:center;">
+        <div style="font-size:4rem;margin-bottom:1rem;">🚛</div>
+        Photo: Crew truck<br>on a residential job
+      </div>
+    </div>
+    <div class="ridealong-content">
+      <div class="section-label">The Ridealong</div>
+      <h2 class="section-heading">Come see what we do.<br>No pitch. No pressure.</h2>
+      <p class="section-sub">
+        Most tree companies hand you a quote and disappear. We'd rather you ride along on a real job. Watch the crew work. Ask questions. See firsthand why people trust us with their property.
+      </p>
+      <ul class="ridealong-features">
+        <li>Free. No strings. No sales pitch hiding behind it.</li>
+        <li>Watch a real crew on a real job, start to finish.</li>
+        <li>Ask the arborist anything — they love talking trees.</li>
+        <li>See our gear, our process, how we leave a site.</li>
+        <li>Then decide if we're your crew. Simple as that.</li>
+      </ul>
+      <a href="tel:7705608656" class="btn btn-primary">Schedule a Ridealong</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CREW ═══════ -->
+<section class="crew" id="crew">
+  <div class="container">
+    <div class="section-label">The Crew</div>
+    <h2 class="section-heading text-green">Climbers. Riggers. Arborists.<br>People who show up.</h2>
+    <p class="section-sub">Every person on the crew earned their spot. No shortcuts.</p>
+
+    <div class="crew-grid">
+      <div class="crew-card">
+        <div class="crew-photo">JR</div>
+        <h3>Jake Reynolds</h3>
+        <div class="role">Lead Climber / Owner</div>
+        <p>15 years in the canopy. ISA certified. Started with a rope and a pickup — now runs the tightest crew in Atlanta.</p>
+      </div>
+      <div class="crew-card">
+        <div class="crew-photo">MC</div>
+        <h3>Marcus Coleman</h3>
+        <div class="role">Certified Arborist</div>
+        <p>If a tree's sick, he'll find out why. If it needs to come down, he'll tell you straight.</p>
+      </div>
+      <div class="crew-card">
+        <div class="crew-photo">DP</div>
+        <h3>Danny Park</h3>
+        <div class="role">Rigging Lead</div>
+        <p>The guy who makes sure 4,000 pounds of oak lands exactly where it should. Every single time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ STATS ═══════ -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="number">40 ft</div>
+        <div class="label">Average climb height</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">15</div>
+        <div class="label">Years running</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">10K+</div>
+        <div class="label">Jobs completed</div>
+      </div>
+      <div class="stat-item">
+        <div class="number">0</div>
+        <div class="label">Shortcuts taken</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ STORM ═══════ -->
+<section class="storm" id="storm">
+  <div class="container">
+    <div class="storm-inner">
+      <div class="storm-text">
+        <div class="section-label">Storm Response</div>
+        <h2 class="section-heading">When the sky falls,<br>we're already moving.</h2>
+        <p class="section-sub">
+          Atlanta storms don't wait. Neither do we. Tree on your roof, blocking your driveway, hanging on a power line — call us. Day or night, we're picking up and heading out.
+        </p>
+        <div class="storm-phone">(770) 560-8656</div>
+        <p class="storm-note">24/7 emergency line. A real person answers.</p>
+      </div>
+      <div class="storm-visual">
+        <div class="storm-icon">⛈️</div>
+        <h3>24/7 Emergency Dispatch</h3>
+        <p>Priority response for existing clients. Same-day service when Atlanta needs it most.</p>
+        <a href="tel:7705608656" class="btn btn-primary" style="margin-top:1rem;">Emergency Call</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TESTIMONIALS ═══════ -->
+<section class="testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-label">Word Gets Around</div>
+    <h2 class="section-heading text-green">Don't take our word for it.</h2>
+
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <blockquote>Had a massive oak leaning toward the house after that April storm. These guys were out the next morning. Dropped it clean — didn't even scratch the gutter.</blockquote>
+        <div class="author">Mike &amp; Karen T.</div>
+        <div class="location">Decatur, GA</div>
+      </div>
+      <div class="testimonial-card">
+        <blockquote>I've used three tree companies in 10 years. Green America is the only one I'd call back. Professional, fair pricing, and they cleaned up like they were never there.</blockquote>
+        <div class="author">Sarah L.</div>
+        <div class="location">Buckhead, GA</div>
+      </div>
+      <div class="testimonial-card">
+        <blockquote>Did the ridealong. Watched them take down a dead pine on a tight lot. Sold. These people know exactly what they're doing.</blockquote>
+        <div class="author">James W.</div>
+        <div class="location">Roswell, GA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="cta">
+  <div class="container">
+    <div class="section-label text-orange">Ready?</div>
+    <h2 class="section-heading">Your trees aren't going<br>to call us themselves.</h2>
+    <p class="section-sub text-khaki">
+      Free estimates. Honest assessments. And if you're curious, come ride along on a job. See the crew work. Then decide.
+    </p>
+    <div class="cta-buttons">
+      <a href="tel:7705608656" class="btn btn-primary">Call (770) 560-8656</a>
+      <a href="#ridealong" class="btn btn-outline">Book a Ridealong</a>
+    </div>
+    <div class="cta-phone">
+      <a href="tel:7705608656" class="text-orange">(770) 560-8656</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-logo">Green America<span>.</span></div>
+        <div style="font-size:0.85rem;margin-top:0.5rem;color:#666;">Tree Care — Atlanta, GA</div>
+      </div>
+      <div class="footer-info">
+        <div><a href="tel:7705608656">(770) 560-8656</a></div>
+        <div style="margin-top:0.25rem;">Atlanta Metro Area</div>
+        <div style="margin-top:0.25rem;">Licensed &amp; Insured</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2025 Green America Tree Care. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Mobile nav toggle
+  const toggle = document.getElementById('navToggle');
+  const links = document.getElementById('navLinks');
+  toggle.addEventListener('click', () => links.classList.toggle('open'));
+
+  // Close mobile nav on link click
+  links.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => links.classList.remove('open'));
+  });
+</script>
+</body>
+</html>

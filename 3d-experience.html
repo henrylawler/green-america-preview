@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Green America Tree Care — The Experience</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; background: #0B1D0F; font-family: 'Georgia', serif; }
+  canvas { display: block; }
+
+  #ui-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+  }
+
+  #brand {
+    position: fixed; top: 20px; left: 20px; z-index: 20;
+    color: #C9B99A; font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; font-weight: bold;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  }
+  #brand span { color: #4CAF50; }
+
+  #phone {
+    position: fixed; top: 20px; right: 20px; z-index: 20;
+    color: #C9B99A; font-size: 14px; letter-spacing: 1px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  }
+
+  #progress-bar {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 20; display: flex; gap: 8px; align-items: center;
+  }
+  .progress-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(201,185,154,0.3); transition: all 0.5s;
+    border: 1px solid rgba(201,185,154,0.5);
+  }
+  .progress-dot.active { background: #C9B99A; transform: scale(1.3); }
+  .progress-dot.done { background: rgba(201,185,154,0.6); }
+
+  #text-overlay {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 20; text-align: center; max-width: 600px; width: 90%;
+    color: #fff; opacity: 0; transition: opacity 0.8s;
+  }
+  #text-overlay.visible { opacity: 1; }
+  #text-overlay h2 {
+    font-size: clamp(20px, 4vw, 32px); margin-bottom: 8px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    color: #C9B99A; font-weight: normal; font-style: italic;
+  }
+  #text-overlay p {
+    font-size: clamp(14px, 2.5vw, 18px); line-height: 1.5;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+    color: rgba(255,255,255,0.9);
+  }
+
+  #continue-btn {
+    position: fixed; bottom: 55px; left: 50%; transform: translateX(-50%);
+    z-index: 25; pointer-events: all; cursor: pointer;
+    background: none; border: 1px solid rgba(201,185,154,0.5);
+    color: #C9B99A; padding: 8px 24px; font-size: 13px;
+    letter-spacing: 2px; text-transform: uppercase; font-family: Georgia, serif;
+    opacity: 0; transition: opacity 0.5s, background 0.3s;
+    border-radius: 2px;
+  }
+  #continue-btn.visible { opacity: 1; }
+  #continue-btn:hover { background: rgba(201,185,154,0.15); }
+
+  #height-marker {
+    position: fixed; right: 40px; z-index: 20;
+    color: #E85D04; font-size: 28px; font-weight: bold;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    opacity: 0; transition: opacity 0.4s;
+    top: 50%; transform: translateY(-50%);
+  }
+  #height-marker.visible { opacity: 1; }
+
+  #cta-section {
+    position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+    z-index: 25; text-align: center; opacity: 0; transition: opacity 1s;
+    pointer-events: none;
+  }
+  #cta-section.visible { opacity: 1; pointer-events: all; }
+  #cta-section a {
+    display: inline-block; background: #E85D04; color: #fff;
+    padding: 14px 36px; font-size: 18px; text-decoration: none;
+    letter-spacing: 1px; font-family: Georgia, serif;
+    border-radius: 3px; margin-top: 10px;
+    transition: background 0.3s;
+  }
+  #cta-section a:hover { background: #d14e00; }
+
+  #loading {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #0B1D0F; z-index: 100; display: flex;
+    align-items: center; justify-content: center; flex-direction: column;
+    color: #C9B99A; font-family: Georgia, serif;
+    transition: opacity 0.8s;
+  }
+  #loading h1 { font-size: 28px; margin-bottom: 10px; font-weight: normal; }
+  #loading p { font-size: 14px; opacity: 0.6; }
+
+  #orbit-hint {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 20; color: rgba(255,255,255,0.6); font-size: 14px;
+    text-align: center; opacity: 0; transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  #orbit-hint.visible { opacity: 1; }
+
+  @media (max-width: 600px) {
+    #brand { font-size: 11px; }
+    #phone { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <h1>Green America Tree Care</h1>
+  <p>Loading the experience...</p>
+</div>
+
+<div id="brand"><span>&#9650;</span> Green America Tree Care</div>
+<div id="phone">(770) 560-8656</div>
+
+<div id="progress-bar"></div>
+
+<div id="text-overlay">
+  <h2 id="text-title"></h2>
+  <p id="text-body"></p>
+</div>
+
+<div id="height-marker"></div>
+<div id="orbit-hint">&#8634; Drag to look around</div>
+
+<button id="continue-btn">Continue &#8594;</button>
+
+<div id="cta-section">
+  <a href="tel:+17705608656">Book a Crew — (770) 560-8656</a>
+</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // === COLORS ===
+  const C = {
+    forest: 0x1B4332,
+    khaki: 0xC9B99A,
+    orange: 0xE85D04,
+    dark: 0x0B1D0F,
+    bark: 0x5C3A1E,
+    darkBark: 0x3E2712,
+    leaf: 0x4A9B5E,
+    leafDark: 0x2D7A3F,
+    grass: 0x2A5E2A,
+    sky1: 0x87CEEB,
+    sky2: 0xE8D5B7,
+    roof: 0x8B4513,
+    house: 0xE8DCC8,
+    metal: 0x888888,
+    rope: 0xD4A54A,
+    white: 0xFFFFFF,
+  };
+
+  // === GLOBALS ===
+  let scene, camera, renderer, clock;
+  let currentStep = 0;
+  let isTransitioning = false;
+  let orbitEnabled = false;
+  let orbitAngle = 0, orbitPitch = 0;
+  let mouseDown = false, lastMX = 0, lastMY = 0;
+  let particles = [];
+  let fallingLimb = null;
+  let limbFalling = false;
+  let limbY = 0;
+  let cutProgress = 0;
+  let cutStarted = false;
+  let sawBlade = null;
+  let cutGap = null;
+  let climbProgress = 0;
+  let climbActive = false;
+  let climbTexts = [];
+  let groundCrewFigures = [];
+
+  const TREE_X = 0, TREE_Z = 0;
+  const TRUNK_HEIGHT = 42;
+  const TRUNK_RADIUS = 1.2;
+
+  // === UI REFS ===
+  const textOverlay = document.getElementById('text-overlay');
+  const textTitle = document.getElementById('text-title');
+  const textBody = document.getElementById('text-body');
+  const continueBtn = document.getElementById('continue-btn');
+  const heightMarker = document.getElementById('height-marker');
+  const progressBar = document.getElementById('progress-bar');
+  const orbitHint = document.getElementById('orbit-hint');
+  const ctaSection = document.getElementById('cta-section');
+  const loadingScreen = document.getElementById('loading');
+
+  // === STEP DEFINITIONS ===
+  const steps = [
+    { // 0 — Ground Level
+      title: 'The Assessment',
+      body: 'Every job starts here. Looking up. Planning the climb.',
+      cam: { x: 6, y: 3, z: 10, tx: 0, ty: 20, tz: 0 },
+      orbit: false,
+    },
+    { // 1 — Gear Up
+      title: 'The Gear',
+      body: 'Harness. Ropes. Saw. 40 pounds of gear going up with you.',
+      cam: { x: 4, y: 1.5, z: 4, tx: 2, ty: 0.5, tz: 0 },
+      orbit: false,
+    },
+    { // 2 — The Climb
+      title: '',
+      body: '',
+      cam: null, // animated
+      orbit: false,
+      climb: true,
+    },
+    { // 3 — The Canopy / Office
+      title: 'The Office',
+      body: 'No cubicle. No ceiling. Just sky and saw.',
+      cam: { x: 3, y: 39, z: 5, tx: 15, ty: 30, tz: -15 },
+      orbit: true,
+    },
+    { // 4 — The Cut
+      title: 'The Cut',
+      body: 'One clean cut. 200 pounds of oak, controlled all the way down.',
+      cam: { x: 3, y: 36, z: 5, tx: 5, ty: 34, tz: 0 },
+      orbit: false,
+      cut: true,
+    },
+    { // 5 — The Drop
+      title: 'The Drop',
+      body: "That's why you hire a crew.",
+      cam: { x: 8, y: 3, z: 8, tx: 4, ty: 5, tz: 0 },
+      orbit: false,
+      drop: true,
+    },
+    { // 6 — Closing
+      title: '',
+      body: 'Now you know what we do up there.',
+      cam: { x: 20, y: 8, z: 20, tx: 0, ty: 18, tz: 0 },
+      orbit: false,
+      closing: true,
+    },
+  ];
+
+  // === INIT ===
+  function init() {
+    scene = new THREE.Scene();
+    clock = new THREE.Clock();
+
+    // Sky
+    scene.background = new THREE.Color(0x6BAFE0);
+    scene.fog = new THREE.FogExp2(0x8FBFDF, 0.004);
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    document.body.appendChild(renderer.domElement);
+
+    // Lights — morning sun
+    const ambient = new THREE.AmbientLight(0x8899AA, 0.6);
+    scene.add(ambient);
+
+    const sun = new THREE.DirectionalLight(0xFFF5E0, 1.4);
+    sun.position.set(30, 50, 20);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 120;
+    sun.shadow.camera.left = -40;
+    sun.shadow.camera.right = 40;
+    sun.shadow.camera.top = 50;
+    sun.shadow.camera.bottom = -10;
+    scene.add(sun);
+
+    const fill = new THREE.DirectionalLight(0x9BB8D4, 0.3);
+    fill.position.set(-20, 20, -10);
+    scene.add(fill);
+
+    buildScene();
+    createParticles();
+    buildProgressDots();
+
+    // Remove loading
+    setTimeout(() => {
+      loadingScreen.style.opacity = '0';
+      setTimeout(() => { loadingScreen.style.display = 'none'; }, 800);
+      enterStep(0);
+    }, 800);
+
+    animate();
+  }
+
+  // === BUILD SCENE ===
+  function buildScene() {
+    // Ground
+    const groundGeo = new THREE.PlaneGeometry(200, 200);
+    const groundMat = new THREE.MeshLambertMaterial({ color: C.grass });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Tree
+    buildTree();
+
+    // Houses
+    buildHouse(-25, 0, -15, 8, 6, 6, C.house, C.roof);
+    buildHouse(20, 0, -25, 10, 7, 8, 0xD5C9B3, 0x6B3A2A);
+    buildHouse(-15, 0, 25, 7, 5, 7, 0xE0D8CC, 0x555555);
+    buildHouse(25, 0, 15, 9, 6, 7, 0xCFC3AD, C.roof);
+
+    // Truck
+    buildTruck(8, 0, 7);
+
+    // Gear on ground
+    buildGearOnGround();
+
+    // Rigging ropes on tree
+    buildRopes();
+
+    // Ground crew figures
+    buildGroundCrew();
+  }
+
+  function buildTree() {
+    // Trunk
+    const trunkGeo = new THREE.CylinderGeometry(TRUNK_RADIUS * 0.7, TRUNK_RADIUS, TRUNK_HEIGHT, 12);
+    const trunkMat = new THREE.MeshLambertMaterial({ color: C.bark });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.set(TREE_X, TRUNK_HEIGHT / 2, TREE_Z);
+    trunk.castShadow = true;
+    scene.add(trunk);
+
+    // Bark texture lines
+    for (let i = 0; i < 8; i++) {
+      const lineGeo = new THREE.CylinderGeometry(0.02, 0.02, TRUNK_HEIGHT * 0.9, 4);
+      const lineMat = new THREE.MeshLambertMaterial({ color: C.darkBark });
+      const line = new THREE.Mesh(lineGeo, lineMat);
+      const angle = (i / 8) * Math.PI * 2;
+      const r = TRUNK_RADIUS * 0.95 - (i > 4 ? 0.15 : 0);
+      line.position.set(TREE_X + Math.cos(angle) * r, TRUNK_HEIGHT / 2, TREE_Z + Math.sin(angle) * r);
+      scene.add(line);
+    }
+
+    // Main branches
+    const branches = [
+      { y: 28, angle: 0.3, len: 8, r: 0.4 },
+      { y: 32, angle: 2.1, len: 10, r: 0.5 },
+      { y: 34, angle: 4.2, len: 7, r: 0.35 },
+      { y: 36, angle: 1.0, len: 9, r: 0.45 },
+      { y: 38, angle: 3.5, len: 6, r: 0.3 },
+      { y: 40, angle: 5.5, len: 8, r: 0.4 },
+      { y: 30, angle: 1.5, len: 7, r: 0.35 },
+      { y: 35, angle: 0.0, len: 11, r: 0.5 }, // this is the one we cut
+    ];
+
+    branches.forEach((b, i) => {
+      const bGeo = new THREE.CylinderGeometry(b.r * 0.5, b.r, b.len, 8);
+      const bMat = new THREE.MeshLambertMaterial({ color: C.bark });
+      const branch = new THREE.Mesh(bGeo, bMat);
+      branch.castShadow = true;
+
+      branch.position.set(
+        TREE_X + Math.cos(b.angle) * b.len * 0.4,
+        b.y,
+        TREE_Z + Math.sin(b.angle) * b.len * 0.4
+      );
+      branch.rotation.z = Math.cos(b.angle) * 0.6;
+      branch.rotation.x = -Math.sin(b.angle) * 0.6;
+
+      if (i === 7) {
+        branch.name = 'cutBranch';
+      }
+      scene.add(branch);
+
+      // Leaf cluster at end of branch
+      const leafCount = 3 + Math.floor(Math.random() * 3);
+      for (let j = 0; j < leafCount; j++) {
+        const lGeo = new THREE.DodecahedronGeometry(1.5 + Math.random() * 1.5, 1);
+        const lMat = new THREE.MeshLambertMaterial({
+          color: Math.random() > 0.5 ? C.leaf : C.leafDark
+        });
+        const leaf = new THREE.Mesh(lGeo, lMat);
+        leaf.castShadow = true;
+        leaf.position.set(
+          TREE_X + Math.cos(b.angle) * (b.len * 0.6 + j * 1.2) + (Math.random() - 0.5) * 2,
+          b.y + (Math.random() - 0.3) * 3,
+          TREE_Z + Math.sin(b.angle) * (b.len * 0.6 + j * 1.2) + (Math.random() - 0.5) * 2
+        );
+        if (i === 7) leaf.name = 'cutLeaf';
+        scene.add(leaf);
+      }
+    });
+
+    // Crown / canopy top
+    for (let k = 0; k < 12; k++) {
+      const cGeo = new THREE.DodecahedronGeometry(2 + Math.random() * 2, 1);
+      const cMat = new THREE.MeshLambertMaterial({
+        color: Math.random() > 0.4 ? C.leaf : C.leafDark
+      });
+      const crown = new THREE.Mesh(cGeo, cMat);
+      crown.castShadow = true;
+      const ca = Math.random() * Math.PI * 2;
+      const cr = Math.random() * 5;
+      crown.position.set(
+        TREE_X + Math.cos(ca) * cr,
+        38 + Math.random() * 6,
+        TREE_Z + Math.sin(ca) * cr
+      );
+      scene.add(crown);
+    }
+  }
+
+  function buildHouse(x, y, z, w, h, d, wallColor, roofColor) {
+    // Walls
+    const wallGeo = new THREE.BoxGeometry(w, h, d);
+    const wallMat = new THREE.MeshLambertMaterial({ color: wallColor });
+    const wall = new THREE.Mesh(wallGeo, wallMat);
+    wall.position.set(x, y + h / 2, z);
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    scene.add(wall);
+
+    // Roof
+    const roofGeo = new THREE.ConeGeometry(Math.max(w, d) * 0.7, 3, 4);
+    const roofMat = new THREE.MeshLambertMaterial({ color: roofColor });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(x, y + h + 1.5, z);
+    roof.rotation.y = Math.PI / 4;
+    roof.castShadow = true;
+    scene.add(roof);
+  }
+
+  function buildTruck(x, y, z) {
+    const truckGroup = new THREE.Group();
+
+    // Bed
+    const bedGeo = new THREE.BoxGeometry(6, 2, 2.5);
+    const bedMat = new THREE.MeshLambertMaterial({ color: C.forest });
+    const bed = new THREE.Mesh(bedGeo, bedMat);
+    bed.position.set(0, 1.5, 0);
+    bed.castShadow = true;
+    truckGroup.add(bed);
+
+    // Cab
+    const cabGeo = new THREE.BoxGeometry(2.5, 2.2, 2.5);
+    const cab = new THREE.Mesh(cabGeo, bedMat);
+    cab.position.set(-3.8, 1.6, 0);
+    cab.castShadow = true;
+    truckGroup.add(cab);
+
+    // Windshield
+    const wsGeo = new THREE.PlaneGeometry(0.1, 1.2, 2.2);
+    const wsMat = new THREE.MeshLambertMaterial({ color: 0x88BBEE, transparent: true, opacity: 0.6 });
+    const ws = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.0), wsMat);
+    ws.position.set(-5.06, 2.0, 0);
+    ws.rotation.y = Math.PI / 2;
+    truckGroup.add(ws);
+
+    // Wheels
+    const wheelGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 12);
+    const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    [[-4, 0.5, 1.5], [-4, 0.5, -1.5], [1, 0.5, 1.5], [1, 0.5, -1.5], [2.5, 0.5, 1.5], [2.5, 0.5, -1.5]].forEach(p => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(p[0], p[1], p[2]);
+      w.rotation.x = Math.PI / 2;
+      truckGroup.add(w);
+    });
+
+    // Logo text area (khaki rectangle on side)
+    const logoGeo = new THREE.PlaneGeometry(4, 0.8);
+    const logoMat = new THREE.MeshLambertMaterial({ color: C.khaki });
+    const logo = new THREE.Mesh(logoGeo, logoMat);
+    logo.position.set(0, 2.0, 1.26);
+    truckGroup.add(logo);
+
+    truckGroup.position.set(x, y, z);
+    truckGroup.rotation.y = -0.3;
+    scene.add(truckGroup);
+  }
+
+  function buildGearOnGround() {
+    const gearGroup = new THREE.Group();
+
+    // Ground tarp
+    const tarpGeo = new THREE.PlaneGeometry(4, 3);
+    const tarpMat = new THREE.MeshLambertMaterial({ color: C.khaki, side: THREE.DoubleSide });
+    const tarp = new THREE.Mesh(tarpGeo, tarpMat);
+    tarp.rotation.x = -Math.PI / 2;
+    tarp.position.y = 0.02;
+    gearGroup.add(tarp);
+
+    // Harness (torus)
+    const harnGeo = new THREE.TorusGeometry(0.4, 0.08, 8, 16);
+    const harnMat = new THREE.MeshLambertMaterial({ color: C.orange });
+    const harness = new THREE.Mesh(harnGeo, harnMat);
+    harness.position.set(-0.8, 0.15, -0.5);
+    harness.rotation.x = Math.PI / 2;
+    gearGroup.add(harness);
+
+    // Rope coil
+    const ropeGeo = new THREE.TorusGeometry(0.5, 0.06, 8, 20);
+    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
+    const rope = new THREE.Mesh(ropeGeo, ropeMat);
+    rope.position.set(0.5, 0.12, -0.3);
+    rope.rotation.x = Math.PI / 2;
+    gearGroup.add(rope);
+
+    // Carabiners (small torus)
+    for (let i = 0; i < 3; i++) {
+      const cGeo = new THREE.TorusGeometry(0.1, 0.02, 6, 12);
+      const cMat = new THREE.MeshLambertMaterial({ color: C.metal });
+      const carabiner = new THREE.Mesh(cGeo, cMat);
+      carabiner.position.set(-0.3 + i * 0.3, 0.08, 0.5);
+      carabiner.rotation.x = Math.PI / 3;
+      gearGroup.add(carabiner);
+    }
+
+    // Chainsaw
+    const sawGroup = buildChainsaw();
+    sawGroup.position.set(1.2, 0.15, 0.6);
+    sawGroup.rotation.y = 0.4;
+    gearGroup.add(sawGroup);
+
+    gearGroup.position.set(2, 0, 1);
+    scene.add(gearGroup);
+  }
+
+  function buildChainsaw() {
+    const g = new THREE.Group();
+
+    // Body
+    const bodyGeo = new THREE.BoxGeometry(0.8, 0.35, 0.3);
+    const bodyMat = new THREE.MeshLambertMaterial({ color: C.orange });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    g.add(body);
+
+    // Bar
+    const barGeo = new THREE.BoxGeometry(1.0, 0.05, 0.15);
+    const barMat = new THREE.MeshLambertMaterial({ color: C.metal });
+    const bar = new THREE.Mesh(barGeo, barMat);
+    bar.position.set(0.85, -0.05, 0);
+    g.add(bar);
+
+    // Handle
+    const handleGeo = new THREE.BoxGeometry(0.15, 0.3, 0.15);
+    const handleMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const handle = new THREE.Mesh(handleGeo, handleMat);
+    handle.position.set(-0.25, 0.3, 0);
+    g.add(handle);
+
+    return g;
+  }
+
+  function buildRopes() {
+    // Main rigging rope along trunk
+    const ropeGeo = new THREE.CylinderGeometry(0.03, 0.03, TRUNK_HEIGHT, 6);
+    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
+    const mainRope = new THREE.Mesh(ropeGeo, ropeMat);
+    mainRope.position.set(TREE_X + TRUNK_RADIUS + 0.1, TRUNK_HEIGHT / 2, TREE_Z);
+    scene.add(mainRope);
+
+    // Secondary rope
+    const rope2 = new THREE.Mesh(ropeGeo, ropeMat);
+    rope2.position.set(TREE_X - 0.5, TRUNK_HEIGHT / 2, TREE_Z + TRUNK_RADIUS + 0.1);
+    scene.add(rope2);
+  }
+
+  function buildGroundCrew() {
+    // Simple stick figures
+    for (let i = 0; i < 2; i++) {
+      const g = new THREE.Group();
+
+      // Body
+      const bodyGeo = new THREE.CylinderGeometry(0.15, 0.2, 2, 8);
+      const bodyMat = new THREE.MeshLambertMaterial({ color: C.forest });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 1.5;
+      g.add(body);
+
+      // Head
+      const headGeo = new THREE.SphereGeometry(0.25, 8, 8);
+      const headMat = new THREE.MeshLambertMaterial({ color: 0xD4A574 });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 2.8;
+      g.add(head);
+
+      // Hard hat
+      const hatGeo = new THREE.CylinderGeometry(0.3, 0.28, 0.15, 8);
+      const hatMat = new THREE.MeshLambertMaterial({ color: C.orange });
+      const hat = new THREE.Mesh(hatGeo, hatMat);
+      hat.position.y = 3.05;
+      g.add(hat);
+
+      g.position.set(4 + i * 3, 0, 3 + i * 2);
+      g.visible = false; // show during drop step
+      scene.add(g);
+      groundCrewFigures.push(g);
+    }
+  }
+
+  // Falling limb (created on demand)
+  function createFallingLimb() {
+    const g = new THREE.Group();
+    const bGeo = new THREE.CylinderGeometry(0.25, 0.5, 8, 8);
+    const bMat = new THREE.MeshLambertMaterial({ color: C.bark });
+    const branch = new THREE.Mesh(bGeo, bMat);
+    branch.rotation.z = Math.PI / 2;
+    g.add(branch);
+
+    // Leaves
+    for (let i = 0; i < 4; i++) {
+      const lGeo = new THREE.DodecahedronGeometry(1.2, 1);
+      const lMat = new THREE.MeshLambertMaterial({ color: C.leaf });
+      const leaf = new THREE.Mesh(lGeo, lMat);
+      leaf.position.set(2 + i * 1.5, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5);
+      g.add(leaf);
+    }
+
+    // Rope attached
+    const ropeGeo = new THREE.CylinderGeometry(0.02, 0.02, 35, 4);
+    const ropeMat = new THREE.MeshLambertMaterial({ color: C.rope });
+    const rope = new THREE.Mesh(ropeGeo, ropeMat);
+    rope.position.set(0, 17, 0);
+    g.add(rope);
+
+    g.position.set(5, 35, 0);
+    g.visible = false;
+    scene.add(g);
+    return g;
+  }
+
+  // Saw at cut position
+  function createCutSaw() {
+    const g = buildChainsaw();
+    g.scale.set(1.5, 1.5, 1.5);
+    g.position.set(3, 35, 1.5);
+    g.rotation.y = Math.PI * 0.7;
+    g.visible = false;
+    scene.add(g);
+    return g;
+  }
+
+  // Cut gap indicator
+  function createCutGap() {
+    const geo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
+    const mat = new THREE.MeshLambertMaterial({ color: 0xFFE0A0 });
+    const gap = new THREE.Mesh(geo, mat);
+    gap.position.set(3.5, 35, 0);
+    gap.visible = false;
+    scene.add(gap);
+    return gap;
+  }
+
+  function createParticles() {
+    // Floating leaf/dust particles
+    const geo = new THREE.BufferGeometry();
+    const count = 80;
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 40;
+      positions[i * 3 + 1] = Math.random() * 45;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({ color: C.khaki, size: 0.15, transparent: true, opacity: 0.4 });
+    const pts = new THREE.Points(geo, mat);
+    scene.add(pts);
+    particles.push(pts);
+  }
+
+  // === PROGRESS DOTS ===
+  function buildProgressDots() {
+    progressBar.innerHTML = '';
+    for (let i = 0; i < steps.length; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'progress-dot';
+      progressBar.appendChild(dot);
+    }
+  }
+
+  function updateProgress() {
+    const dots = progressBar.querySelectorAll('.progress-dot');
+    dots.forEach((d, i) => {
+      d.className = 'progress-dot';
+      if (i < currentStep) d.classList.add('done');
+      if (i === currentStep) d.classList.add('active');
+    });
+  }
+
+  // === TEXT ===
+  function showText(title, body) {
+    textTitle.textContent = title;
+    textBody.textContent = body;
+    textOverlay.classList.add('visible');
+  }
+
+  function hideText() {
+    textOverlay.classList.remove('visible');
+  }
+
+  function showContinue() {
+    continueBtn.classList.add('visible');
+    continueBtn.style.pointerEvents = 'all';
+  }
+
+  function hideContinue() {
+    continueBtn.classList.remove('visible');
+    continueBtn.style.pointerEvents = 'none';
+  }
+
+  // === CAMERA ===
+  let camTarget = { x: 0, y: 0, z: 0 };
+  let camLookTarget = { x: 0, y: 20, z: 0 };
+  let camLerp = 0.02;
+
+  function setCameraTarget(cx, cy, cz, tx, ty, tz) {
+    camTarget = { x: cx, y: cy, z: cz };
+    camLookTarget = { x: tx, y: ty, z: tz };
+  }
+
+  function updateCamera() {
+    if (orbitEnabled) {
+      // Orbit around look target
+      const dist = 14;
+      const ox = camLookTarget.x + Math.cos(orbitAngle) * dist * Math.cos(orbitPitch);
+      const oy = camLookTarget.y + Math.sin(orbitPitch) * dist;
+      const oz = camLookTarget.z + Math.sin(orbitAngle) * dist * Math.cos(orbitPitch);
+      camera.position.lerp(new THREE.Vector3(ox, oy, oz), 0.05);
+      camera.lookAt(camLookTarget.x, camLookTarget.y, camLookTarget.z);
+    } else {
+      camera.position.lerp(new THREE.Vector3(camTarget.x, camTarget.y, camTarget.z), camLerp);
+      const lookPos = new THREE.Vector3(camLookTarget.x, camLookTarget.y, camLookTarget.z);
+      // Smooth look
+      const currentDir = new THREE.Vector3();
+      camera.getWorldDirection(currentDir);
+      const targetDir = lookPos.clone().sub(camera.position).normalize();
+      currentDir.lerp(targetDir, 0.05);
+      camera.lookAt(camera.position.clone().add(currentDir.multiplyScalar(10)));
+    }
+  }
+
+  // === ENTER STEP ===
+  function enterStep(step) {
+    currentStep = step;
+    isTransitioning = true;
+    updateProgress();
+    hideContinue();
+    hideText();
+    heightMarker.classList.remove('visible');
+    orbitHint.classList.remove('visible');
+    ctaSection.classList.remove('visible');
+    orbitEnabled = false;
+    climbActive = false;
+    camLerp = 0.02;
+
+    // Hide ground crew by default
+    groundCrewFigures.forEach(f => f.visible = false);
+
+    const s = steps[step];
+
+    if (s.cam) {
+      setCameraTarget(s.cam.x, s.cam.y, s.cam.z, s.cam.tx, s.cam.ty, s.cam.tz);
+    }
+
+    // Step-specific logic
+    switch (step) {
+      case 0: // Ground level
+        setTimeout(() => {
+          showText(s.title, s.body);
+          setTimeout(() => showContinue(), 1500);
+          isTransitioning = false;
+        }, 1000);
+        break;
+
+      case 1: // Gear up
+        setTimeout(() => {
+          showText(s.title, s.body);
+          setTimeout(() => showContinue(), 1500);
+          isTransitioning = false;
+        }, 1500);
+        break;
+
+      case 2: // Climb
+        climbProgress = 0;
+        climbActive = true;
+        isTransitioning = false;
+        // Climb animates in the update loop
+        break;
+
+      case 3: // Canopy
+        camLerp = 0.015;
+        setTimeout(() => {
+          showText(s.title, s.body);
+          orbitEnabled = s.orbit;
+          camLookTarget = { x: 0, y: 36, z: 0 };
+          orbitAngle = 0.5;
+          orbitPitch = 0.15;
+          orbitHint.classList.add('visible');
+          setTimeout(() => {
+            orbitHint.classList.remove('visible');
+            showContinue();
+          }, 3000);
+          isTransitioning = false;
+        }, 2000);
+        break;
+
+      case 4: // The Cut
+        if (!sawBlade) sawBlade = createCutSaw();
+        if (!cutGap) cutGap = createCutGap();
+        cutProgress = 0;
+        cutStarted = false;
+        setTimeout(() => {
+          showText(s.title, s.body);
+          sawBlade.visible = true;
+          cutStarted = true;
+          isTransitioning = false;
+          // Auto advance after cut animation
+          setTimeout(() => showContinue(), 4000);
+        }, 1500);
+        break;
+
+      case 5: // The Drop
+        if (!fallingLimb) fallingLimb = createFallingLimb();
+        limbFalling = true;
+        limbY = 35;
+        fallingLimb.visible = true;
+        fallingLimb.position.y = 35;
+        groundCrewFigures.forEach(f => f.visible = true);
+        if (sawBlade) sawBlade.visible = false;
+        if (cutGap) cutGap.visible = false;
+        setTimeout(() => {
+          showText(s.title, s.body);
+          setTimeout(() => showContinue(), 3000);
+          isTransitioning = false;
+        }, 2000);
+        break;
+
+      case 6: // Closing
+        if (fallingLimb) fallingLimb.visible = false;
+        groundCrewFigures.forEach(f => f.visible = false);
+        camLerp = 0.01;
+        setTimeout(() => {
+          showText('', s.body);
+          setTimeout(() => {
+            ctaSection.classList.add('visible');
+          }, 2000);
+          isTransitioning = false;
+        }, 2500);
+        break;
+    }
+  }
+
+  function nextStep() {
+    if (isTransitioning) return;
+    if (currentStep < steps.length - 1) {
+      enterStep(currentStep + 1);
+    }
+  }
+
+  // === ANIMATION LOOP ===
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = clock.getDelta();
+    const t = clock.getElapsedTime();
+
+    // Particles drift
+    particles.forEach(p => {
+      const pos = p.geometry.attributes.position.array;
+      for (let i = 0; i < pos.length; i += 3) {
+        pos[i] += Math.sin(t + i) * 0.003;
+        pos[i + 1] -= 0.005;
+        if (pos[i + 1] < 0) pos[i + 1] = 40 + Math.random() * 5;
+      }
+      p.geometry.attributes.position.needsUpdate = true;
+    });
+
+    // Climb animation
+    if (climbActive && currentStep === 2) {
+      climbProgress += dt * 0.08; // speed of climb
+      if (climbProgress > 1) climbProgress = 1;
+
+      const height = climbProgress * 40;
+      const camY = 2 + height;
+      // Look down to emphasize height, look slightly outward
+      const lookY = Math.max(0, camY - 10 - climbProgress * 15);
+
+      setCameraTarget(2.5, camY, 3, 5, lookY, 5);
+      camLerp = 0.06;
+
+      // Height marker
+      const ft = Math.round(height);
+      if (ft > 0) {
+        heightMarker.textContent = ft + ' ft';
+        heightMarker.classList.add('visible');
+      }
+
+      // Text overlays during climb
+      if (ft >= 8 && ft < 15) {
+        showText('', '');
+      } else if (ft >= 18 && ft < 24) {
+        showText('', 'Most ladders stop here.');
+      } else if (ft >= 30 && ft < 36) {
+        showText('', '');
+      } else if (ft >= 38) {
+        showText('', "We're just getting started.");
+      }
+
+      if (climbProgress >= 1) {
+        climbActive = false;
+        setTimeout(() => {
+          heightMarker.classList.remove('visible');
+          showContinue();
+        }, 1500);
+      }
+    }
+
+    // Cut animation
+    if (cutStarted && currentStep === 4) {
+      cutProgress += dt * 0.25;
+      if (cutProgress > 1) cutProgress = 1;
+
+      // Vibrate saw
+      if (sawBlade) {
+        sawBlade.position.y = 35 + Math.sin(t * 30) * 0.03;
+        sawBlade.position.x = 3 + Math.sin(t * 25) * 0.02;
+      }
+
+      // Show cut gap growing
+      if (cutGap && cutProgress > 0.2) {
+        cutGap.visible = true;
+        cutGap.scale.x = Math.min(cutProgress * 1.5, 1);
+      }
+    }
+
+    // Falling limb
+    if (limbFalling && fallingLimb) {
+      limbY -= dt * 12; // fall speed
+      if (limbY < 3) {
+        limbY = 3;
+        limbFalling = false;
+      }
+      fallingLimb.position.y = limbY;
+      fallingLimb.rotation.z += dt * 0.3;
+    }
+
+    updateCamera();
+    renderer.render(scene, camera);
+  }
+
+  // === EVENTS ===
+  continueBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    nextStep();
+  });
+
+  // Touch/mouse for orbit
+  function onPointerDown(e) {
+    mouseDown = true;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    lastMX = x;
+    lastMY = y;
+  }
+  function onPointerMove(e) {
+    if (!mouseDown || !orbitEnabled) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = x - lastMX;
+    const dy = y - lastMY;
+    orbitAngle += dx * 0.005;
+    orbitPitch = Math.max(-0.5, Math.min(0.8, orbitPitch + dy * 0.005));
+    lastMX = x;
+    lastMY = y;
+  }
+  function onPointerUp() { mouseDown = false; }
+
+  renderer ? null : null; // ensure we wait
+  document.addEventListener('mousedown', onPointerDown);
+  document.addEventListener('mousemove', onPointerMove);
+  document.addEventListener('mouseup', onPointerUp);
+  document.addEventListener('touchstart', onPointerDown, { passive: true });
+  document.addEventListener('touchmove', onPointerMove, { passive: true });
+  document.addEventListener('touchend', onPointerUp);
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') {
+      nextStep();
+    }
+  });
+
+  // Init
+  init();
+})();
+</script>
+</body>
+</html>

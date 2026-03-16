@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green America — Preview Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0B1D0F;
+            color: #F5F1EB;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: #F5F1EB;
+        }
+        .subtitle {
+            color: #C9B99A;
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 900px;
+            width: 100%;
+        }
+        a.card {
+            display: block;
+            background: #1B4332;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 2rem;
+            text-decoration: none;
+            color: #F5F1EB;
+            transition: all 0.3s ease;
+        }
+        a.card:hover {
+            border-color: #E85D04;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(232, 93, 4, 0.2);
+        }
+        .card h2 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #E85D04;
+        }
+        .card p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #C9B99A;
+        }
+        .card .tag {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(232, 93, 4, 0.15);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #E85D04;
+        }
+        footer {
+            margin-top: 3rem;
+            color: #C9B99A;
+            font-size: 0.85rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Green America</h1>
+    <p class="subtitle">Brand exploration & mockup previews</p>
+    <div class="grid">
+        <a class="card" href="mockup-a.html">
+            <h2>Mockup A</h2>
+            <p>Clean refresh of the current site. Professional, tightened up, new voice.</p>
+            <span class="tag">Service Site</span>
+        </a>
+        <a class="card" href="mockup-b.html">
+            <h2>Mockup B</h2>
+            <p>Bolder layout. Diagonal cuts, full-viewport hero, more visual drama.</p>
+            <span class="tag">Bold Redesign</span>
+        </a>
+        <a class="card" href="mockup-c-lifestyle.html">
+            <h2>Mockup C — Lifestyle</h2>
+            <p>The rebirth. GA as a brand you want to join. Ridealongs, crew life, merch.</p>
+            <span class="tag">Lifestyle Brand</span>
+        </a>
+        <a class="card" href="storm-response.html">
+            <h2>Storm Response</h2>
+            <p>SEO-ready storm microsite. Live tracking, same-day service, Jermaine approved.</p>
+            <span class="tag">Emergency / SEO</span>
+        </a>
+        <a class="card" href="3d-experience.html">
+            <h2>3D Tree Experience</h2>
+            <p>Interactive walkthrough. Climb 40 feet, make the cut, watch the drop.</p>
+            <span class="tag">Three.js / Interactive</span>
+        </a>
+    </div>
+    <footer>Green America Tree Care — Atlanta, GA — (770) 560-8656</footer>
+</body>
+</html>

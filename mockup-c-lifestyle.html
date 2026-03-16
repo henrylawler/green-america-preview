@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Green America — The Life</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --forest: #1B4332;
+    --khaki: #C9B99A;
+    --orange: #E85D04;
+    --near-black: #0B1D0F;
+    --off-white: #F5F1EB;
+    --forest-mid: #2D6A4F;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--near-black);
+    background: var(--off-white);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 3rem;
+    background: rgba(11, 29, 15, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201, 185, 154, 0.12);
+  }
+  .nav-logo {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 1.4rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+  .nav-logo span { color: var(--orange); }
+  .nav-links { display: flex; gap: 2rem; align-items: center; }
+  .nav-links a {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.85rem;
+    color: var(--khaki);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--orange); }
+  .nav-cta {
+    background: var(--orange) !important;
+    color: var(--off-white) !important;
+    padding: 0.6rem 1.4rem;
+    border-radius: 2px;
+    font-weight: 600 !important;
+  }
+  .nav-cta:hover { background: #d14f00 !important; }
+  .nav-phone {
+    font-family: 'Oswald', sans-serif;
+    color: var(--off-white);
+    font-weight: 500; font-size: 0.9rem;
+    letter-spacing: 0.05em;
+  }
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px; cursor: pointer;
+    background: none; border: none; padding: 4px;
+  }
+  .hamburger span {
+    display: block; width: 26px; height: 2px;
+    background: var(--off-white); transition: 0.3s;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: flex-end;
+    background: var(--near-black);
+    overflow: hidden;
+  }
+  .hero-image-placeholder {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #0B1D0F 0%, #1B4332 40%, #0B1D0F 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .hero-image-placeholder::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top,
+      rgba(11, 29, 15, 0.95) 0%,
+      rgba(11, 29, 15, 0.4) 40%,
+      rgba(11, 29, 15, 0.1) 70%,
+      rgba(11, 29, 15, 0.3) 100%
+    );
+  }
+  .hero-photo-note {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem; color: rgba(201, 185, 154, 0.35);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-align: center; max-width: 400px; line-height: 1.6;
+    z-index: 1;
+  }
+  /* Decorative tree silhouette shapes */
+  .hero-image-placeholder .tree-shape {
+    position: absolute;
+    background: rgba(27, 67, 50, 0.3);
+    border-radius: 50% 50% 5% 5%;
+  }
+  .tree-shape:nth-child(1) { width: 200px; height: 350px; bottom: 0; left: 10%; }
+  .tree-shape:nth-child(2) { width: 280px; height: 500px; bottom: 0; left: 30%; opacity: 0.5; }
+  .tree-shape:nth-child(3) { width: 160px; height: 300px; bottom: 0; right: 15%; opacity: 0.4; }
+
+  .hero-content {
+    position: relative; z-index: 2;
+    padding: 0 3rem 6rem;
+    max-width: 900px;
+  }
+  .hero-tag {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.9rem;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    line-height: 0.95;
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--orange);
+    display: block;
+  }
+  .hero-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.15rem;
+    color: var(--khaki);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+  .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1rem;
+    color: var(--off-white);
+    background: var(--orange);
+    padding: 1rem 2.5rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: none; cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+  }
+  .btn-primary:hover { background: #d14f00; transform: translateY(-2px); }
+  .btn-outline {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1rem;
+    color: var(--khaki);
+    background: transparent;
+    padding: 1rem 2.5rem;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: 2px solid var(--khaki);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-outline:hover {
+    background: var(--khaki);
+    color: var(--near-black);
+  }
+  .hero-scroll {
+    position: absolute; bottom: 2rem;
+    left: 50%; transform: translateX(-50%);
+    z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  }
+  .hero-scroll span {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.7rem; color: rgba(201,185,154,0.5);
+    text-transform: uppercase; letter-spacing: 0.2em;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--orange), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(0.7); }
+    50% { opacity: 1; transform: scaleY(1); }
+  }
+
+  /* ── BRAND STATEMENT ── */
+  .brand-statement {
+    background: var(--near-black);
+    padding: 8rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .brand-statement::before {
+    content: 'GA';
+    position: absolute;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 30vw;
+    color: rgba(27, 67, 50, 0.08);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    line-height: 1;
+  }
+  .brand-statement blockquote {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.5rem, 4vw, 3rem);
+    color: var(--off-white);
+    line-height: 1.4;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .brand-statement blockquote span {
+    color: var(--orange);
+  }
+  .brand-statement .divider {
+    width: 60px; height: 3px;
+    background: var(--orange);
+    margin: 2.5rem auto 0;
+  }
+
+  /* ── RIDEALONG ── */
+  .ridealong {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 80vh;
+  }
+  .ridealong-image {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--forest-mid) 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .ridealong-image::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(201, 185, 154, 0.03) 40px,
+      rgba(201, 185, 154, 0.03) 41px
+    );
+  }
+  .ridealong-image .photo-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(201, 185, 154, 0.4);
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .ridealong-image .free-badge {
+    position: absolute; top: 2rem; right: 2rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    color: var(--near-black);
+    background: var(--orange);
+    padding: 0.75rem 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transform: rotate(3deg);
+  }
+  .ridealong-content {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 5rem 4rem;
+    background: var(--off-white);
+  }
+  .section-tag {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.8rem;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 1rem;
+  }
+  .ridealong-content h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    color: var(--near-black);
+    text-transform: uppercase;
+    line-height: 1.05;
+    margin-bottom: 1.5rem;
+  }
+  .ridealong-content p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #3a3a3a;
+    margin-bottom: 1.5rem;
+    max-width: 480px;
+  }
+  .ridealong-content p strong {
+    color: var(--near-black);
+  }
+  .ridealong-details {
+    display: flex; flex-wrap: wrap; gap: 1.5rem;
+    margin: 1.5rem 0 2.5rem;
+  }
+  .ridealong-detail {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--forest);
+  }
+  .ridealong-detail .icon {
+    width: 36px; height: 36px;
+    background: var(--forest);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--off-white);
+    font-size: 0.9rem;
+  }
+
+  /* ── THE LIFE ── */
+  .the-life {
+    background: var(--near-black);
+    padding: 7rem 3rem;
+    position: relative;
+  }
+  .the-life .section-header {
+    text-align: center;
+    margin-bottom: 5rem;
+  }
+  .the-life h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .the-life h2 span { color: var(--orange); }
+  .the-life .section-sub {
+    font-size: 1.05rem;
+    color: var(--khaki);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .timeline {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--orange), var(--forest), var(--orange));
+  }
+  .timeline-item {
+    display: flex; gap: 2.5rem;
+    margin-bottom: 3.5rem;
+    position: relative;
+  }
+  .timeline-time {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    color: var(--orange);
+    min-width: 60px;
+    text-align: right;
+    padding-top: 0.2rem;
+    position: relative;
+  }
+  .timeline-time::after {
+    content: '';
+    position: absolute;
+    right: -19px; top: 8px;
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    border: 3px solid var(--near-black);
+  }
+  .timeline-content h3 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1.3rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+  .timeline-content p {
+    color: var(--khaki);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 550px;
+  }
+
+  /* ── VIDEO SECTIONS ── */
+  .video-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 500px;
+  }
+  .video-placeholder {
+    background: var(--forest);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.5rem;
+    padding: 3rem;
+    position: relative;
+  }
+  .play-button {
+    width: 80px; height: 80px;
+    border: 3px solid var(--off-white);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .play-button:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    transform: scale(1.1);
+  }
+  .play-button::after {
+    content: '';
+    display: block;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 12px 0 12px 22px;
+    border-color: transparent transparent transparent var(--off-white);
+    margin-left: 4px;
+  }
+  .video-label {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.8rem;
+    color: rgba(245,241,235,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+  .video-info {
+    padding: 4rem;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    background: var(--off-white);
+  }
+  .video-info h3 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    text-transform: uppercase;
+    color: var(--near-black);
+    margin-bottom: 1rem;
+    line-height: 1.1;
+  }
+  .video-info p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #555;
+    max-width: 440px;
+    margin-bottom: 2rem;
+  }
+  .video-section.alt .video-placeholder {
+    order: 2;
+    background: linear-gradient(135deg, var(--near-black) 0%, var(--forest) 100%);
+  }
+  .video-section.alt .video-info {
+    order: 1;
+    background: var(--khaki);
+  }
+  .video-section.alt .video-info h3 { color: var(--near-black); }
+  .video-section.alt .video-info p { color: #3a3a3a; }
+
+  /* ── CREW ── */
+  .crew {
+    background: var(--off-white);
+    padding: 7rem 3rem;
+  }
+  .crew .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  .crew h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: var(--near-black);
+    text-transform: uppercase;
+  }
+  .crew h2 span { color: var(--orange); }
+  .crew-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .crew-card {
+    background: var(--near-black);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s;
+  }
+  .crew-card:hover { transform: translateY(-4px); }
+  .crew-photo {
+    height: 340px;
+    background: linear-gradient(135deg, var(--forest) 0%, var(--near-black) 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .crew-photo .photo-desc {
+    font-size: 0.75rem;
+    color: rgba(201, 185, 154, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+    max-width: 200px;
+    line-height: 1.5;
+  }
+  .crew-years {
+    position: absolute; top: 1rem; right: 1rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 0.75rem;
+    background: var(--orange);
+    color: var(--off-white);
+    padding: 0.3rem 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .crew-info {
+    padding: 1.5rem;
+  }
+  .crew-name {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 1.5rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+  .crew-role {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.8rem;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+  }
+  .crew-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.75rem; margin-bottom: 1.25rem;
+  }
+  .crew-stat-label {
+    font-size: 0.65rem;
+    color: rgba(201, 185, 154, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.15rem;
+  }
+  .crew-stat-value {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 0.9rem;
+    color: var(--khaki);
+  }
+  .crew-story {
+    font-size: 0.85rem;
+    color: rgba(201, 185, 154, 0.7);
+    line-height: 1.6;
+    font-style: italic;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(201, 185, 154, 0.1);
+  }
+
+  /* ── SERVICES ── */
+  .services {
+    background: var(--forest);
+    padding: 6rem 3rem;
+    position: relative;
+  }
+  .services::before {
+    content: 'WHAT WE DO';
+    position: absolute;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 8vw;
+    color: rgba(11, 29, 15, 0.2);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
+  .services .section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    position: relative;
+  }
+  .services h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .services .section-sub {
+    color: var(--khaki);
+    font-weight: 300;
+    font-size: 1rem;
+    opacity: 0.7;
+  }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .service-item {
+    border: 1px solid rgba(201, 185, 154, 0.15);
+    padding: 2rem 1.5rem;
+    transition: all 0.3s;
+  }
+  .service-item:hover {
+    border-color: var(--orange);
+    background: rgba(232, 93, 4, 0.05);
+  }
+  .service-item h4 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1.1rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+  .service-item p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--khaki);
+    opacity: 0.7;
+  }
+
+  /* ── MERCH ── */
+  .merch {
+    background: var(--khaki);
+    padding: 7rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .merch h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: var(--near-black);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .merch .section-sub {
+    color: var(--forest);
+    font-size: 1.05rem;
+    margin-bottom: 3.5rem;
+    font-weight: 300;
+  }
+  .merch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto 3rem;
+  }
+  .merch-item {
+    background: var(--near-black);
+    height: 320px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s;
+  }
+  .merch-item:hover { transform: translateY(-4px); }
+  .merch-item .photo-desc {
+    font-size: 0.75rem;
+    color: rgba(201, 185, 154, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+    max-width: 200px;
+    line-height: 1.5;
+  }
+  .merch-item-name {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 1rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .merch-item .coming-soon {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+  .merch-cta {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500; font-size: 1rem;
+    color: var(--forest);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── PHOTO GRID ── */
+  .photo-grid-section {
+    background: var(--near-black);
+    padding: 5rem 0 0;
+  }
+  .photo-grid-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 0 3rem;
+  }
+  .photo-grid-header h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .photo-grid-header p {
+    font-family: 'Inter', sans-serif;
+    color: var(--khaki); opacity: 0.5;
+    font-size: 0.9rem;
+  }
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+  }
+  .photo-grid-item {
+    aspect-ratio: 1;
+    background: var(--forest);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: opacity 0.3s;
+    cursor: pointer;
+  }
+  .photo-grid-item:hover { opacity: 0.85; }
+  .photo-grid-item:nth-child(odd) {
+    background: linear-gradient(135deg, var(--forest) 0%, var(--near-black) 100%);
+  }
+  .photo-grid-item:nth-child(even) {
+    background: linear-gradient(135deg, var(--near-black) 0%, var(--forest-mid) 100%);
+  }
+  .photo-grid-item .photo-desc {
+    font-size: 0.65rem;
+    color: rgba(201, 185, 154, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+    padding: 1rem;
+    line-height: 1.5;
+  }
+
+  /* ── JOIN THE CREW ── */
+  .join-crew {
+    background: var(--near-black);
+    padding: 7rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .join-crew::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 20% 50%, rgba(27, 67, 50, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(232, 93, 4, 0.08) 0%, transparent 50%);
+  }
+  .join-crew-inner {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .join-crew h2 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    color: var(--off-white);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+  .join-crew h2 span { color: var(--orange); }
+  .join-crew p {
+    color: var(--khaki);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+  .email-form {
+    display: flex;
+    max-width: 480px;
+    margin: 0 auto;
+    gap: 0;
+  }
+  .email-form input {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    padding: 1rem 1.5rem;
+    border: 2px solid rgba(201, 185, 154, 0.2);
+    background: rgba(201, 185, 154, 0.05);
+    color: var(--off-white);
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .email-form input::placeholder {
+    color: rgba(201, 185, 154, 0.4);
+  }
+  .email-form input:focus {
+    border-color: var(--orange);
+  }
+  .email-form button {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600; font-size: 0.9rem;
+    background: var(--orange);
+    color: var(--off-white);
+    border: none;
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.3s;
+    white-space: nowrap;
+  }
+  .email-form button:hover { background: #d14f00; }
+  .join-note {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: rgba(201, 185, 154, 0.35);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--near-black);
+    border-top: 1px solid rgba(201, 185, 154, 0.1);
+    padding: 3rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  .footer-brand {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700; font-size: 1.2rem;
+    color: var(--off-white);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .footer-brand span { color: var(--orange); }
+  .footer-info {
+    display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;
+  }
+  .footer-info a, .footer-info span {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: var(--khaki);
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+  .footer-info a:hover { opacity: 1; color: var(--orange); }
+  .footer-copy {
+    font-size: 0.75rem;
+    color: rgba(201, 185, 154, 0.3);
+    width: 100%;
+    text-align: center;
+    margin-top: 1rem;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: rgba(11, 29, 15, 0.97);
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    .hero-content { padding: 0 1.5rem 4rem; }
+    .ridealong { grid-template-columns: 1fr; }
+    .ridealong-image { min-height: 350px; }
+    .ridealong-content { padding: 3rem 1.5rem; }
+    .video-section { grid-template-columns: 1fr; }
+    .video-section.alt .video-placeholder { order: 0; }
+    .video-section.alt .video-info { order: 0; }
+    .video-placeholder { min-height: 300px; }
+    .video-info { padding: 3rem 1.5rem; }
+    .timeline::before { left: 15px; }
+    .timeline-time { min-width: 45px; font-size: 0.85rem; }
+    .timeline-time::after { right: -12px; top: 6px; width: 10px; height: 10px; }
+    .timeline-item { gap: 1.5rem; }
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .crew-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .merch-grid { grid-template-columns: 1fr; max-width: 350px; margin: 0 auto 3rem; }
+    .email-form { flex-direction: column; }
+    .email-form input, .email-form button { width: 100%; }
+    footer { justify-content: center; text-align: center; }
+    .footer-info { justify-content: center; }
+    .the-life, .crew, .services, .merch, .join-crew { padding: 5rem 1.5rem; }
+    .brand-statement { padding: 5rem 1.5rem; }
+  }
+
+  @media (max-width: 480px) {
+    .services-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 2.6rem; }
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Green<span>America</span></div>
+  <div class="nav-links" id="navLinks">
+    <a href="#ridealong">Ridealong</a>
+    <a href="#thelife">The Life</a>
+    <a href="#crew">The Crew</a>
+    <a href="#services">What We Do</a>
+    <a href="#merch">Merch</a>
+    <a href="#join" class="nav-cta">Join the Crew</a>
+  </div>
+  <span class="nav-phone">(770) 560-8656</span>
+  <button class="hamburger" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-image-placeholder">
+    <div class="tree-shape"></div>
+    <div class="tree-shape"></div>
+    <div class="tree-shape"></div>
+    <div class="hero-photo-note">[ Cinematic wide shot: climber silhouetted against early morning sky, 60 feet up in a massive oak, Atlanta skyline soft in the background, golden hour light cutting through canopy ]</div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-tag">Atlanta, Georgia</div>
+    <h1>This Is<em>Green America.</em></h1>
+    <p class="hero-sub">We climb trees for a living. We cut with precision. We work 40 feet up while most people are still in traffic. This isn't a job. It's a life. Come see for yourself.</p>
+    <div class="hero-buttons">
+      <a href="#ridealong" class="btn-primary">Book a Free Ridealong</a>
+      <a href="#thelife" class="btn-outline">See The Life</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- BRAND STATEMENT -->
+<section class="brand-statement">
+  <blockquote>
+    We don't talk about what we do.<br>
+    We <span>show</span> people.<br>
+    Come up with us.
+  </blockquote>
+  <div class="divider"></div>
+</section>
+
+<!-- RIDEALONG -->
+<section class="ridealong" id="ridealong">
+  <div class="ridealong-image">
+    <div class="free-badge">Free — Always</div>
+    <div class="photo-desc">[ Photo: homeowner wearing a hard hat, grinning ear to ear, standing next to the crew truck at the base of a massive pine. First-timer energy. ]</div>
+  </div>
+  <div class="ridealong-content">
+    <div class="section-tag">The Ridealong Experience</div>
+    <h2>Come Up<br>With Us.</h2>
+    <p>Most people have never watched a tree come down up close. The ropes. The saws. The controlled chaos. The view from the canopy. It's something you don't forget.</p>
+    <p><strong>The Ridealong is free. Always.</strong> Ride with the crew for a morning. Watch the work. Ask questions. Stand under an 80-foot oak while a thousand-pound limb drops exactly where it should. No pitch. No pressure. Just the work.</p>
+    <div class="ridealong-details">
+      <div class="ridealong-detail">
+        <div class="icon">☀</div>
+        Half-day experience
+      </div>
+      <div class="ridealong-detail">
+        <div class="icon">🔶</div>
+        Gear provided
+      </div>
+      <div class="ridealong-detail">
+        <div class="icon">✓</div>
+        No obligation. Ever.
+      </div>
+    </div>
+    <a href="tel:7705608656" class="btn-primary">Book Your Ridealong</a>
+  </div>
+</section>
+
+<!-- THE LIFE -->
+<section class="the-life" id="thelife">
+  <div class="section-header">
+    <div class="section-tag">A Day With Green America</div>
+    <h2>The <span>Life</span></h2>
+    <p class="section-sub">This is what a Tuesday looks like when you work with your hands, your crew, and gravity.</p>
+  </div>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-time">5:45 AM</div>
+      <div class="timeline-content">
+        <h3>The Callout</h3>
+        <p>Dark out. Coffee's already brewed in the thermos. Trucks get loaded — ropes, rigging, saws. Everyone knows their job before a word gets said. The radio crackles. Let's go.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">6:30 AM</div>
+      <div class="timeline-content">
+        <h3>Rolling Out</h3>
+        <p>Convoy through empty Atlanta streets. Three trucks. The city's still asleep. Somebody's got bad music on and nobody's complaining yet.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">7:15 AM</div>
+      <div class="timeline-content">
+        <h3>The Climb</h3>
+        <p>First ascent of the day. Spikes bite bark. The world gets quieter the higher you go. At 40 feet, you can see the whole neighborhood. Up here, it's just you, the tree, and the saw.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">9:00 AM</div>
+      <div class="timeline-content">
+        <h3>Canopy Views</h3>
+        <p>Morning light breaks through the branches. For a second you stop and look around. Hawks circling. Rooftops below. This is the office. Not bad.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">11:30 AM</div>
+      <div class="timeline-content">
+        <h3>The Cut</h3>
+        <p>The big one. Everything planned. The notch, the hinge, the back cut. Crew's positioned. Ropes tensioned. The saw screams and a 2,000-pound section swings exactly where it should. Clean.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">1:00 PM</div>
+      <div class="timeline-content">
+        <h3>The Drop</h3>
+        <p>Trunk sections hitting the ground like thunder. The chipper's running. Sawdust everywhere. The homeowner's watching from the porch with their jaw on the floor.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">4:30 PM</div>
+      <div class="timeline-content">
+        <h3>Cleanup & Load</h3>
+        <p>The yard looks better than before we got there. Trucks loaded. Gear stowed. Handshakes all around.</p>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">5:30 PM</div>
+      <div class="timeline-content">
+        <h3>Beers After</h3>
+        <p>Because you earned it. The crew at a dive bar, still covered in sawdust. Telling the same stories, laughing at the same jokes. Tomorrow we do it again.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO: DAY IN THE LIFE -->
+<section class="video-section">
+  <div class="video-placeholder">
+    <div class="play-button"></div>
+    <span class="video-label">Day in the Life — 3:42</span>
+  </div>
+  <div class="video-info">
+    <div class="section-tag">Watch</div>
+    <h3>A Day With<br>The Crew</h3>
+    <p>Dawn to dark. The trucks, the climb, the cut. No narration, no music — just the sound of the work. This is what we do.</p>
+    <a href="#" class="btn-primary">Coming Soon</a>
+  </div>
+</section>
+
+<!-- VIDEO: RIDEALONG HIGHLIGHTS -->
+<section class="video-section alt">
+  <div class="video-info">
+    <div class="section-tag">Watch</div>
+    <h3>Ridealong<br>Highlights</h3>
+    <p>Real people, real reactions. First-timers watching a 60-foot pine come down from 20 feet away. The faces say it all.</p>
+    <a href="#" class="btn-primary">Coming Soon</a>
+  </div>
+  <div class="video-placeholder">
+    <div class="play-button"></div>
+    <span class="video-label">Ridealong Highlights — 2:18</span>
+  </div>
+</section>
+
+<!-- CREW -->
+<section class="crew" id="crew">
+  <div class="section-header">
+    <div class="section-tag">Meet the Team</div>
+    <h2>The <span>Crew</span></h2>
+  </div>
+  <div class="crew-grid">
+    <div class="crew-card">
+      <div class="crew-photo">
+        <span class="crew-years">12 Years</span>
+        <div class="photo-desc">[ Portrait: Marcus mid-climb, looking down at the camera with a grin, rope coiled over one shoulder ]</div>
+      </div>
+      <div class="crew-info">
+        <div class="crew-name">Marcus</div>
+        <div class="crew-role">Lead Climber</div>
+        <div class="crew-stats">
+          <div>
+            <div class="crew-stat-label">Favorite Saw</div>
+            <div class="crew-stat-value">Stihl MS 201 TC-M</div>
+          </div>
+          <div>
+            <div class="crew-stat-label">Highest Climb</div>
+            <div class="crew-stat-value">110 ft White Oak</div>
+          </div>
+        </div>
+        <div class="crew-story">"Dropped a widow-maker in Buckhead that was leaning over a pool house. Homeowner had three cameras on it. Still gets views."</div>
+      </div>
+    </div>
+
+    <div class="crew-card">
+      <div class="crew-photo">
+        <span class="crew-years">8 Years</span>
+        <div class="photo-desc">[ Portrait: Tommy on the ground, guiding a massive limb down with rigging ropes, focused and covered in sawdust ]</div>
+      </div>
+      <div class="crew-info">
+        <div class="crew-name">Tommy</div>
+        <div class="crew-role">Rigging Lead / Ground Boss</div>
+        <div class="crew-stats">
+          <div>
+            <div class="crew-stat-label">Favorite Saw</div>
+            <div class="crew-stat-value">Husqvarna 572 XP</div>
+          </div>
+          <div>
+            <div class="crew-stat-label">Biggest Drop</div>
+            <div class="crew-stat-value">3,200 lb trunk section</div>
+          </div>
+        </div>
+        <div class="crew-story">"We had a ridealong guy who was so hyped after watching us work, he signed up for climbing school the next week. That was pretty cool."</div>
+      </div>
+    </div>
+
+    <div class="crew-card">
+      <div class="crew-photo">
+        <span class="crew-years">5 Years</span>
+        <div class="photo-desc">[ Portrait: Jay standing on the back of the truck bed, arms crossed, crew truck and chipper behind him, late afternoon light ]</div>
+      </div>
+      <div class="crew-info">
+        <div class="crew-name">Jay</div>
+        <div class="crew-role">Climber / Sawyer</div>
+        <div class="crew-stats">
+          <div>
+            <div class="crew-stat-label">Favorite Saw</div>
+            <div class="crew-stat-value">Stihl MS 261</div>
+          </div>
+          <div>
+            <div class="crew-stat-label">Specialty</div>
+            <div class="crew-stat-value">Tight-access removals</div>
+          </div>
+        </div>
+        <div class="crew-story">"Took a pine out between a fence and a power line with 18 inches of clearance on both sides. Didn't touch either one."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section class="services" id="services">
+  <div class="section-header">
+    <div class="section-tag">The Work</div>
+    <h2>What We Do</h2>
+    <p class="section-sub">The craft behind the brand.</p>
+  </div>
+  <div class="services-grid">
+    <div class="service-item">
+      <h4>Tree Removal</h4>
+      <p>Full removals, any size, any access. We've taken 100-foot pines out of backyards with 6 feet of clearance.</p>
+    </div>
+    <div class="service-item">
+      <h4>Pruning &amp; Trimming</h4>
+      <p>Canopy shaping, deadwood removal, crown reduction. Clean cuts that heal right.</p>
+    </div>
+    <div class="service-item">
+      <h4>Storm Damage</h4>
+      <p>When it comes down wrong, we come out fast. 24/7 storm response across metro Atlanta.</p>
+    </div>
+    <div class="service-item">
+      <h4>Stump Grinding</h4>
+      <p>Below grade, clean finish. No stump, no trace, no problem.</p>
+    </div>
+    <div class="service-item">
+      <h4>Lot Clearing</h4>
+      <p>New builds, overgrown lots, property lines. We clear it clean and haul everything out.</p>
+    </div>
+    <div class="service-item">
+      <h4>Crane Work</h4>
+      <p>For the big jobs — hazardous leans, tight spaces, structures underneath. Precision extraction.</p>
+    </div>
+    <div class="service-item">
+      <h4>Emergency Service</h4>
+      <p>Tree on your house at 2 AM? We answer the phone. We show up. That's it.</p>
+    </div>
+    <div class="service-item">
+      <h4>Consultations</h4>
+      <p>Not sure what you need? We'll come look. Honest assessment, no upsell. Free for Ridealong alumni.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MERCH -->
+<section class="merch" id="merch">
+  <div class="section-tag">Wear the Brand</div>
+  <h2>GA Merch</h2>
+  <p class="section-sub">Coming soon. The kind of stuff you'd actually wear.</p>
+  <div class="merch-grid">
+    <div class="merch-item">
+      <div class="photo-desc">[ Product shot: Worn-in snapback hat, forest green with the GA chainsaw logo embroidered in orange thread ]</div>
+      <div class="merch-item-name">The GA Snapback</div>
+      <div class="coming-soon">Coming Soon</div>
+    </div>
+    <div class="merch-item">
+      <div class="photo-desc">[ Product shot: Embroidered patch — "Green America Tree Crew" in an arched design with crossed chainsaws ]</div>
+      <div class="merch-item-name">Crew Patch</div>
+      <div class="coming-soon">Coming Soon</div>
+    </div>
+    <div class="merch-item">
+      <div class="photo-desc">[ Product shot: Carhartt work jacket with the GA logo on the chest — like something the crew actually wears on the job ]</div>
+      <div class="merch-item-name">GA × Carhartt Jacket</div>
+      <div class="coming-soon">Coming Soon</div>
+    </div>
+  </div>
+  <p class="merch-cta">Drop your email below. We'll let you know first.</p>
+</section>
+
+<!-- PHOTO GRID -->
+<section class="photo-grid-section">
+  <div class="photo-grid-header">
+    <h2>@GreenAmericaTree</h2>
+    <p>The feed. The work. The life.</p>
+  </div>
+  <div class="photo-grid">
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Climber silhouette against bright sky, looking up from the base ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Close-up: chainsaw teeth biting into fresh wood, sawdust spray ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Crew trucks lined up at dawn, headlights on, fog rolling ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Canopy view looking down — ropes, harness, neighborhood far below ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Massive trunk section mid-swing on rigging ropes ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Crew laughing on tailgate, end of day, golden light ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Close-up: worn leather climbing boots, spikes visible ]</div>
+    </div>
+    <div class="photo-grid-item">
+      <div class="photo-desc">[ Before/after split: overgrown yard to clean, open space ]</div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN THE CREW -->
+<section class="join-crew" id="join">
+  <div class="join-crew-inner">
+    <div class="section-tag">Don't Miss Out</div>
+    <h2>Join<br>The <span>Crew</span></h2>
+    <p>Ridealong openings. Merch drops. Behind-the-scenes from the canopy. The kind of email you actually open.</p>
+    <form class="email-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='You\'re In ✓';">
+      <input type="email" placeholder="Your email" required>
+      <button type="submit">Join the Crew</button>
+    </form>
+    <p class="join-note">No spam. Just the good stuff. Unsubscribe anytime.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Green<span>America</span> Tree Care</div>
+  <div class="footer-info">
+    <a href="tel:7705608656">(770) 560-8656</a>
+    <span>Atlanta, GA</span>
+    <a href="#ridealong">Book a Ridealong</a>
+    <a href="mailto:hello@greenamericatree.com">hello@greenamericatree.com</a>
+  </div>
+  <div class="footer-copy">© 2026 Green America Tree Care. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
